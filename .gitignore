@@ -1,3 +1,10 @@
+# My local stuff
+Temp/
+Assets/Pi.gif
+Assets/video.jpeg
+Assets/ok.png
+Assets/web_22x22.png
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
