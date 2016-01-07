@@ -90,8 +90,7 @@ class About ( BasicNotepage ):
 		Separator(self,orient='horizontal').grid(row=3,column=0,
 			columnspan=2,sticky='NSEW',pady=10)
 					
-		# see if Windows, Mac, or Linux
-		# Why???? Only on PI for PiCamera!
+		# See if Windows, Mac, or Linux. Why???? Only on PI for PiCamera!
 		txt = win32_ver()[0]
 		if txt:
 			os = 'Windows OS: %s' % txt

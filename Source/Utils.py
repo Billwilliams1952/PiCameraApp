@@ -1,5 +1,5 @@
 '''
-NotePage.py
+Utils.py
 Copyright (C) 2015 - Bill Williams
 
 This program is free software: you can redistribute it and/or modify
@@ -17,24 +17,14 @@ try:
 	from Tkinter import *
 except ImportError:
 	from tkinter import *
-
-from tkColorChooser import askcolor
-from Utils import UnderConstruction
-
-import 	tkMessageBox
 import 	ttk
 from 	ttk import *
 import 	tkFont
-
-# Base CLass for all NotePad pages.
-class BasicNotepage ( Frame ):
-	def __init__(self, parent, camera ):
-		Frame.__init__(self, parent,padding=(10,10,10,10))
-		self.grid(sticky='NSEW')
-		self.columnconfigure(0,weight=1)
-		self.camera = camera
-		self.BuildPage()
-	def BuildPage ( self ): 		# Overide this!
-		UnderConstruction(self)
-	def Reset ( self ):	pass # Override this if needed
-
+from tkFont import *
+from 	Dialog import *
+	
+# General utility functions	
+	
+def UnderConstruction ( window ):
+	Label(window,text='UNDER CONSTRUCTION',font=('Arial',14,('bold')),
+		anchor='center').grid(row=0,column=0,sticky='EW')

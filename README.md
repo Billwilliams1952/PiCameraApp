@@ -20,8 +20,8 @@ PiCameraApp has been developed using Python ver 2.7. In addition, it uses the fo
 
 | Library    | Usage                                               |
 | :--------- | :-------------------------------------------------- |
-| picamera   | The python interface to the PiCamera hardware |
-| RPi.GPIO   | Required to toggle the LED on the camera |
+| picamera   | The python interface to the PiCamera hardware. Can get it at https://pypi.python.org/pypi/picamera/1.10 |
+| RPi.GPIO   | Required to toggle the LED on the camera. Can get it at http://www.raspberrypi-spy.co.uk/2012/05/install-rpi-gpio-python-library/ |
 
 #License
 

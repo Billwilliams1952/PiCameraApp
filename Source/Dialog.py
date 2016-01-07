@@ -22,6 +22,7 @@ import 	tkFont
 import 	tkMessageBox
 
 from PIL import Image, ImageTk
+from Utils import UnderConstruction
 
 #
 # Generic Dialog CLass - All dialogs inherit from this one
@@ -85,8 +86,7 @@ class Dialog:
 			self._parent.wait_window(self._window)
 			
 	def BuildDialog ( self ):				# Always Override
-		Label(self.MainFrame,text='UNDER CONSTRUCTION',font=('Arial',14,('bold')),
-			anchor='center').grid(row=0,column=0,sticky='EW')
+		UnderConstruction ( self.MainFrame )
 	def OkPressed ( self ): return True		# Optional Override
 	def CancelPressed ( self ): return True	# Optional Override 
 	def HelpPressed ( self ):				# Optional Override
