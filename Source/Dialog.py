@@ -1,5 +1,5 @@
 '''
-CameraApplication.py
+Dialog.py
 Copyright (C) 2015 - Bill Williams
 
 This program is free software: you can redistribute it and/or modify
@@ -23,15 +23,19 @@ import 	tkMessageBox
 
 from PIL import Image, ImageTk
 
-class Dialog ( ):
+#
+# Generic Dialog CLass - All dialogs inherit from this one
+#
+class Dialog:
 	def __init__ ( self, parent, modal=True, title='No title supplied',
 				   showtitlebar=True, centerTo='default', okonly=True,
-				   help=False, resizable=False, width=None, height=None, camera=None ):
+				   help=False, resizable=False, minwidth=None, minheight=None,
+				   camera=None ):
 		self._parent = parent
 		
 		self._window = Toplevel()
 		
-		self._window.minsize(width,height)
+		self._window.minsize(minwidth,minheight)
 			
 		if not resizable:
 			self._window.resizable(width=False,height=False)
@@ -42,11 +46,17 @@ class Dialog ( ):
 		self._window.title(title)
 		self._centerTo = centerTo
 		
+		# Should be:			Need to fix.....
+		# self._mainFrame
+		#	self.LayoutFrame
+		#		Supplied to User for Layout
+		#	self._buttonFrame
+		#		Help	Cancel	Ok
 		self.MainFrame = Frame(self._window,padding=(5,5,5,5))
 		self.MainFrame.grid(row=0,column=0,columnspan=3,sticky='NSEW')
 	
 		self.camera = camera
-		self.Build()	# Overriden function
+		self.BuildDialog()	# Overriden function
 
 		self.okimage = ImageTk.PhotoImage(file='Assets/ok_22x22.png')
 		b = Button(self._window,text='Close' if okonly else 'Ok',
@@ -74,7 +84,9 @@ class Dialog ( ):
 			self._window.grab_set()
 			self._parent.wait_window(self._window)
 			
-	def Build ( self ):	pass				# Always Override
+	def BuildDialog ( self ):				# Always Override
+		Label(self.MainFrame,text='UNDER CONSTRUCTION',font=('Arial',14,('bold')),
+			anchor='center').grid(row=0,column=0,sticky='EW')
 	def OkPressed ( self ): return True		# Optional Override
 	def CancelPressed ( self ): return True	# Optional Override 
 	def HelpPressed ( self ):				# Optional Override

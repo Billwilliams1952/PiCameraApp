@@ -1,5 +1,5 @@
 '''
-CameraApplication.py
+PreferencesDialog.py
 Copyright (C) 2015 - Bill Williams
 
 This program is free software: you can redistribute it and/or modify
@@ -27,6 +27,27 @@ from	NotePage import *
 import PIL
 from PIL import Image, ImageTk
 
+# All PiCameraApp global preferences ae handled here		
+class PreferencesDialog ( Dialog ):
+	def BuildDialog ( self ):		
+		self.MainFrame.columnconfigure(0,weight=1)
+		self.MainFrame.rowconfigure(0,weight=1)
+		n = Notebook(self.MainFrame,padding=(5,5,5,5),width=30,height=200)
+		n.grid(row=0,column=0,sticky='NEWS')
+		
+		GeneralPage = General(n,self.camera)
+		InterfacePage = Interface(n,self.camera)
+		OtherPage = Other(n,self.camera)
+		
+		n.add(GeneralPage,text='General',underline=0)
+		n.add(InterfacePage,text='Interface',underline=0)
+		n.add(OtherPage,text='Other',underline=0)
+
+# Handle PiCameraApp General preferences
+class General ( BasicNotepage ):
+	pass
+
+# Handle PiCameraApp Interface preferences
 class Interface ( BasicNotepage ):
 	def BuildPage ( self ):
 		self.iconMonitor = ImageTk.PhotoImage(PIL.Image.open("Assets/computer-monitor.png"))
@@ -43,22 +64,6 @@ class Interface ( BasicNotepage ):
 	def ThemesSelected ( self, event ):
 		Style().theme_use(self.themes.get())
 		
-class PreferencesDialog ( Dialog ):
-	def Build ( self ):		
-		self.MainFrame.columnconfigure(0,weight=1)
-		self.MainFrame.rowconfigure(0,weight=1)
-		n = Notebook(self.MainFrame,padding=(5,5,5,5),width=30,height=200)
-		n.grid(row=0,column=0,sticky=(N,E,W,S))
-		#n.columnconfigure(0,weight=1)
-		f1 = Frame(n,padding=(3,3,3,3))
-		
-		BasicControlsFrame = Interface(n,self.camera)
-		
-		f3 = Frame(n,padding=(3,3,3,3))
-		f3.columnconfigure(0,weight=1)
-		f3.rowconfigure(0,weight=1)
-		n.add(f1,text='General',underline=0)
-		n.add(BasicControlsFrame,text='Interface',underline=0)
-		n.add(f3,text='Other',underline=0)
-
-
+# Handle PiCameraApp Other preferences		
+class Other ( BasicNotepage ):
+	pass

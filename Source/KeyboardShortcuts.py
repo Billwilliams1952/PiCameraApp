@@ -1,5 +1,5 @@
 '''
-CameraApplication.py
+KeyboardShortcuts.py
 Copyright (C) 2015 - Bill Williams
 
 This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@ import PIL
 from PIL import Image, ImageTk
 
 class KeyboardShortcutsDialog ( Dialog ):
-	def Build ( self ):
+	def BuildDialog ( self ):
 		def AddCmdKey ( text ):
 			bg = 'even' if self.even else 'odd' 
 			strs = text.split(':')

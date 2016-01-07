@@ -62,18 +62,702 @@ from	Mapping import *
 from	NotePage import *
 from	CameraUtils import *
 
-class Picture:
-	def __init__ ( self ):
-		# create all variabled needed here
-		pass
-	def TakePicture ( self, camera ):
-		# take the picture, store all variables
-		# store the state of the camera in a text array for printing
-		# displaying
-		pass
-	def ClearPicture ( self ):
+class PiCameraApp ( Frame ):
+	def __init__(self, root, camera, title):
+		Frame.__init__(self, root)
+
+		self.grid(padx=5,pady=5)
+		self.root = root
+
+		self.ControlMapping = ControlMapping()
+
+		self.camera = camera
+		self.camera.start_preview(fullscreen=False,window=(0,0,10,10))
+
+		self.title = title
+		self.root.title(title)
+
+		master = root
+
+		master.rowconfigure(0,weight=1)
+		master.columnconfigure(1,weight=1)
+		master.config(padx=5,pady=5)
+		
+		#----------- Icons for Menu and Buttons ------------------------
+		self.iconClose = ImageTk.PhotoImage(PIL.Image.open("Assets/window-close.png"))
+		self.iconPrefs = ImageTk.PhotoImage(PIL.Image.open('Assets/prefs1_16x16.png'))
+		self.iconWeb = ImageTk.PhotoImage(PIL.Image.open('Assets/web_16x16.png'))
+		self.iconCamera = ImageTk.PhotoImage(PIL.Image.open('Assets/camera_16x16.gif'))
+		self.iconCameraBig = ImageTk.PhotoImage(PIL.Image.open('Assets/camera_22x22.png'))
+		self.iconVideo = ImageTk.PhotoImage(PIL.Image.open('Assets/video_16x16.gif'))
+		self.iconVideoBig = ImageTk.PhotoImage(PIL.Image.open('Assets/video_22x22.gif'))
+		#---------------------------------------------------------------
+
+		#user = expanduser('~')
+		## Make a subdirectory
+		#self.photoDirectory = '%s/Documents/PiCameraDemo/Photos/' % user
+		#if not os.path.exists(self.photoDirectory):
+			#os.makedirs(self.photoDirectory)
+			#print '%s created' % self.photoDirectory
+	
+		#self.videoDirectory = '%s/Documents/PiCameraDemo/Videos/' % user
+		#if not os.path.exists(self.videoDirectory):
+			#os.makedirs(self.videoDirectory)
+			#print '%s created' % self.videoDirectory
+		##---------------------------------------------------------
+
+		frame1 = Frame(master,padding=(5,5,5,5))
+		frame1.grid(row=0,column=0,sticky="NSEW")
+		frame1.rowconfigure(2,weight=1)
+		frame1.columnconfigure(0,weight=1)
+
+		self.AlwaysPreview = False
+			
+		n = Notebook(frame1,padding=(5,5,5,5))
+		n.grid(row=1,column=0,rowspan=2,sticky=(N,E,W,S))
+		n.columnconfigure(0,weight=1)
+
+		#-------------------- Basic Controls Mode ----------------------
+		self.BasicControlsFrame = BasicControls(n,camera)
+
+		#---------------------- Exposure Mode --------------------------
+		self.ExposureFrame = Exposure(n,camera)
+
+		#----------------- More Lower Level Control --------------------
+		self.FinerControlFrame = FinerControl(n,camera)
+
+		#----------------------- Annotate ------------------------------
+		self.AnnotateFrame = Annotate(n,camera)
+
+		n.add(self.BasicControlsFrame ,text='Basic')
+		n.add(self.ExposureFrame,text='Exposure')
+		n.add(self.FinerControlFrame,text='Finer control')
+		n.add(self.AnnotateFrame,text='Annotate/EXIF Metadata')
+
+		# ----------------------Paned Window ---------------------------
+		# Start of Image Canvas preview, camera captures,
+		#	Paned Window VERTICAL
+		#		TopFrame
+		#			Preview ImageCanvas	row Weight=1
+		#			ButtonFrame
+		#				Preview Buttons
+		#		BottomFrame
+		#			PanedWindow HORIZONTAL row 0, col 0
+		#				LeftFrame
+		#					EXIF Text
+		#				RightFrame
+		#					Photo Canvas
+		#			ButtonFrame
+		#				Picture / Video buttons
+		
+		self.pw = PanedWindow(master,orient=VERTICAL)
+		self.pw.grid(row=0,column=1,sticky="NSEW")
+		self.pw.rowconfigure(0,weight=1)
+		self.pw.columnconfigure(0,weight=1)
+		
+		TopFrame = Frame(self.pw,padding=(5,5,5,5))
+		TopFrame.grid(row=0,column=0,sticky="NEWS")
+		TopFrame.rowconfigure(0,weight=1)
+		TopFrame.columnconfigure(1,weight=1)
+
+		self.ImageCanvas = Canvas(TopFrame,width=256,height=256,
+			background=self.ControlMapping.FocusColor,cursor='diamond_cross')
+		self.ImageCanvas.grid(row=0,column=0,columnspan=2,sticky="NEWS")
+		self.CursorX = self.ImageCanvas.create_line(0,0,320,0,
+			fill='red',tags=('cursors'))
+		self.CursorY = self.ImageCanvas.create_line(0,0,0,240,
+			fill='red',tags=('cursors'))
+		self.ImageCanvas.create_text((256,256),text="Preview off",fill='blue',
+			activefill='gray',font=('Helveticar',36,"bold italic"),
+			tags=("nopreview"))
+		self.ImageCanvas.itemconfigure('nopreview',state='hidden')
+		self.ImageCanvas.bind("<Motion>",self.CanvasMouseMove)
+		self.ImageCanvas.bind("<ButtonPress>",self.CanvasMouseMove)
+		self.ImageCanvas.bind("<Enter>",self.CanvasEnterLeave)
+		self.ImageCanvas.bind("<Leave>",self.CanvasEnterLeave)
+
+		ButtonFrame = Frame(TopFrame,padding=(5,5,5,5),relief=SUNKEN)
+		ButtonFrame.grid(row=1,column=0,columnspan=2,sticky="NEWS")
+
+		self.PreviewOn = BooleanVar()
+		self.PreviewOn.set(True)
+		Checkbutton(ButtonFrame,text='Enable preview',variable=self.PreviewOn,
+			command=self.SetPreviewOn).grid(row=0,column=0,padx=5,sticky='W')
+
+		l2 = Label(ButtonFrame,text="Alpha:")
+		l2.grid(column=1,row=0,sticky='W')
+		self.alpha = Scale(ButtonFrame,from_=0,to=255,
+				command=self.AlphaChanged,orient='horizontal',length=100)
+		self.alpha.grid(row=0,column=2,sticky='E')
+		self.alpha.set(255)
+
+		self.VFlipState = False
+		self.flipVgif = ImageTk.PhotoImage(file='Assets/flipV.gif')
+		self.Vflip = Button(ButtonFrame,image=self.flipVgif,width=10,
+			command=self.ToggleVFlip,padding=(2,2,2,2))
+		self.Vflip.grid(row=0,column=3,padx=5)
+		self.HFlipState = False
+		self.flipHgif = ImageTk.PhotoImage(file='Assets/flipH.gif')
+		self.Hflip = Button(ButtonFrame,image=self.flipHgif,width=10,
+			command=self.ToggleHFlip,padding=(2,2,2,2))
+		self.Hflip.grid(row=0,column=4)
+
+		#------------------ Photo / Video Section ----------------------
+		self.pictureStream = io.BytesIO()
+		
+		BottomFrame = Frame(self.pw,padding=(5,5,5,5))
+		BottomFrame.grid(row=1,column=0,sticky="NEWS")
+		BottomFrame.rowconfigure(0,weight=1)
+		BottomFrame.columnconfigure(0,weight=1)
+		
+		self.photoPanedWindow = PanedWindow(BottomFrame,orient=HORIZONTAL)
+		self.photoPanedWindow.grid(row=0,column=0,sticky="NSEW")
+		self.photoPanedWindow.rowconfigure(0,weight=1)
+		self.photoPanedWindow.columnconfigure(0,weight=1)	
+		self.photoPanedWindow.columnconfigure(1,weight=1)	
+		
+		self.LeftFrame = Frame(self.photoPanedWindow,padding=(5,5,5,5))
+		self.LeftFrame.grid(row=0,column=0,sticky="NEWS")
+		self.LeftFrame.rowconfigure(0,weight=1)
+		self.LeftFrame.columnconfigure(0,weight=1)
+		
+		sb = Scrollbar(self.LeftFrame,orient='vertical')
+		sb.grid(row=0,column=1,sticky='NS')
+		sb1 = Scrollbar(self.LeftFrame,orient='horizontal')
+		sb1.grid(row=1,column=0,sticky='EW')		
+		text = Text(self.LeftFrame,width=37,wrap='none',
+			yscrollcommand=sb.set,xscrollcommand=sb1.set)
+		text.bind('<Configure>',self.TextboxResize)
+		text.grid(row=0,column=0,sticky='NSEW')
+		sb.config(command=text.yview)
+		sb1.config(command=text.xview)
+		text.bind("<Key>",lambda e : "break")	# ignore all keypress		
+		self.CameraUtils = CameraUtils(self.camera,self.BasicControlsFrame)
+		self.CameraUtils.SetupCameraSettingsTextbox(text)
+		
+		RightFrame = Frame(self.photoPanedWindow,padding=(5,5,5,5))
+		RightFrame.grid(row=0,column=1,sticky="NEWS")
+		RightFrame.rowconfigure(0,weight=1)
+		RightFrame.columnconfigure(0,weight=1)
+		
+		self.CurrentImage = None
+		self.photoCanvas = Canvas(RightFrame,width=50,height=50,
+			background=self.ControlMapping.FocusColor,cursor='diamond_cross')
+		self.photoCanvas.grid(row=0,column=0,sticky="NEWS")
+		self.photoCanvas.create_line(0,0,320,0,
+			fill='red',tags=('cursors','objs','cursorx'))
+		self.photoCanvas.create_line(0,0,0,240,
+			fill='red',tags=('cursors','objs','cursory'))
+		self.photoCanvas.create_line(0,0,320,0,
+			fill='lightgray',activefill='darkgray',tags=('cross','cross1'))
+		self.photoCanvas.create_line(0,0,0,240,
+			fill='lightgray',activefill='darkgray',tags=('cross','cross2'))
+		self.photoCanvas.create_text(0,0,
+			tags=('capture'),text='',
+			fill='blue',activefill='gray',anchor='center',
+			font=('Helveticar',18,"bold italic"))
+		self.photoCanvas.itemconfigure('capture',state='hidden')
+		self.photoCanvas.create_text(0,0,
+			fill='red',tags=('text','objs'),anchor='nw')
+
+		self.photoCanvas.bind('<Configure>',self.PhotoCanvasResize)
+		self.photoCanvas.bind("<ButtonPress-1>",self.photoCanvasScrollStart)
+		self.photoCanvas.bind("<B1-Motion>",self.photoCanvasScrollMove)
+		self.photoCanvas.bind("<Motion>",self.photoCanvasMove)
+		self.photoCanvas.bind("<ButtonRelease-1>",self.photoCanvasButtonUp)
+		self.photoCanvas.bind("<Enter>",self.photoCanvasEnterLeave)
+		self.photoCanvas.bind("<Leave>",self.photoCanvasEnterLeave)
+		self.InPhotoZoom = False 	# hack - 
+		# self.PhotoState = 'none', 'picture', 'zoom', 'video' ???
+
+		vsbar = Scrollbar(RightFrame,orient=VERTICAL)
+		vsbar.grid(row=0,column=1,sticky='NS')
+		vsbar.config(command=self.photoCanvas.yview)
+		self.photoCanvas.config(yscrollcommand=vsbar.set)
+						
+		hsbar = Scrollbar(RightFrame,orient=HORIZONTAL)
+		hsbar.grid(row=1,column=0,sticky='EW')
+		hsbar.config(command=self.photoCanvas.xview)
+		self.photoCanvas.config(xscrollcommand=hsbar.set)	
+		self.photoCanvas.bind("<5>",self.WheelScrollPhotoCanvas) #MouseWheel
+		self.photoCanvas.bind("<4>",self.WheelScrollPhotoCanvas) #MouseWheel
+		self.photoZoomScale	= 1.0
+
+		self.photoPanedWindow.add(self.LeftFrame)
+		self.photoPanedWindow.add(RightFrame)
+		self.photoPanedWindow.forget(self.LeftFrame)
+
+		ButtonFrame = Frame(BottomFrame,padding=(5,5,5,5))
+		ButtonFrame.grid(row=1,column=0,columnspan=3,sticky="NEWS")
+		b = Button(ButtonFrame,text='Picture',underline=0,image=self.iconCameraBig,
+			compound='left',command=lambda e=None:self.TakePicture(e),width=7)
+		b.grid(row=0,column=0,sticky='W')
+		self.InCaptureVideo = False  # hack ----
+		self.TakeVideo = Button(ButtonFrame,text='Video',underline=0,
+			image=self.iconVideoBig,compound='left',
+			command=lambda e=None:self.ToggleVideo(e),width=7)
+		self.TakeVideo.grid(row=0,column=1,sticky='W')
+		self.clearImage = ImageTk.PhotoImage(file='Assets/cancel_22x22.png')
+		b = Button(ButtonFrame,command=lambda e=None:self.ClearPicture(e),
+			image=self.clearImage,padding=(0,1,0,1))
+		b.grid(row=0,column=2,sticky='W',padx=5)
+		
+		self.pw.add(TopFrame)
+		self.pw.add(BottomFrame)
+
+		#-------------------------- Status Bar -------------------------
+		self.statusText = StringVar()
+		lbl = Label(master,textvariable=self.statusText,style='StatusBar.TLabel')
+		lbl.grid(row=1,column=0,columnspan=3,sticky="EW")
+
+		# Catch all focus events to the Top Window. Use to control
+		# whether the camera preview_window overlay is visible or not.
+		# I'm sure this will fail with Topmost windows... :(
+
+		self.root.bind('<FocusOut>',self.LoseFocus)
+		self.root.bind('<FocusIn>',self.GotFocus)
+
+		#--------------------------- Menu ------------------------------
+		menubar = Menu(root,
+			foreground='black',background='#F0F0F0',activebackground='#86ABD9',
+			activeforeground='white')
+		
+		filemenu = Menu(menubar,tearoff=0,foreground='black',background='#F0F0F0',
+		activebackground='#86ABD9',activeforeground='white')
+		filemenu.add_command(label="Save",underline=2,compound='left',
+			command=lambda e=None:self.SavePictureorVideo(e),accelerator='Ctrl+S')
+		self.DefineAccelerators('c','s',lambda e=None:self.SavePictureorVideo(e))
+		filemenu.add_separator()
+		filemenu.add_command(label="System preferences...",underline=7,
+			image=self.iconPrefs, compound='left',
+			command=lambda e=None:self.SystemPreferences(e))
+		filemenu.add_separator()
+		filemenu.add_command(label="Quit",underline=0,image=self.iconClose,
+			compound='left',accelerator='Ctrl+Q',
+			command=lambda e=None:self.quitProgram(e))
+		self.DefineAccelerators('c','q',lambda e=None:self.quitProgram(e))
+		menubar.add("cascade",label='File',underline=0,menu=filemenu)
+		
+		viewmenu = Menu(menubar,tearoff=0,foreground='black',background='#F0F0F0',
+		activebackground='#86ABD9',activeforeground='white')
+		
+		self.viewImageAttributesPane = BooleanVar()
+		self.viewImageAttributesPane.set(True)
+		viewmenu.add_checkbutton(label="Image attribute pane",underline=6,
+			accelerator='Ctrl+Shift+A',
+			onvalue=True,offvalue=False,variable=self.viewImageAttributesPane,
+			command=lambda e='Menu':self.ViewImageAttributesPane(e))
+		self.DefineAccelerators('cs','a',self.ViewImageAttributesPane)
+		
+		viewmenu.add_command(label="Properties...",underline=0,accelerator='Ctrl+Alt+P',
+			image=self.iconPrefs,compound='left',
+			command=lambda e=None:self.ViewProperties(e))
+		self.DefineAccelerators('ca','p',lambda e=None:self.ViewProperties(e))
+		menubar.add("cascade",label='View',underline=0,menu=viewmenu)
+		
+		photomenu = Menu(menubar,tearoff=0,foreground='black',background='#F0F0F0',
+		activebackground='#86ABD9',activeforeground='white')
+		photomenu.add_command(label="Take picture",underline=5,
+		image=self.iconCamera,compound='left',
+			command=lambda e=None:self.TakePicture(e),accelerator='Ctrl+P')
+		self.DefineAccelerators('c','p',lambda e=None:self.TakePicture(e))
+		photomenu.add_command(label="Toggle video",underline=7,
+			image=self.iconVideo,compound='left',
+			command=lambda e=None:self.ToggleVideo(e),accelerator='Ctrl+V')
+		self.DefineAccelerators('c','v',lambda e=None:self.ToggleVideo(e))
+		photomenu.add_command(label="Clear picture",underline=0,
+			image=self.iconClose,compound='left',
+			command=lambda e=None:self.ClearPicture(e),accelerator='Ctrl+C')
+		self.DefineAccelerators('c','c',lambda e=None:self.ClearPicture(e))
+		menubar.add("cascade",label='Photo',underline=0,menu=photomenu)
+		
+		helpmenu = Menu(menubar,tearoff=0,foreground='black',background='#F0F0F0',
+		activebackground='#86ABD9',activeforeground='white')
+		helpmenu.add_command(label="Keyboard shortcuts...",underline=0,
+			command=lambda e=None:self.KeyboardShortcuts(e))
+		helpmenu.add_command(label="Picamera documentation...",underline=0,
+			command=lambda e=None:self.PiCameraDocs(e),image=self.iconWeb,compound='left')
+		helpmenu.add_separator()
+		helpmenu.add_command(label="About...",underline=0,command=lambda e=None:self.HelpAbout(e))
+		menubar.add("cascade",label='Help',underline=0,menu=helpmenu)
+		
+		root.config(menu=menubar)
+		#--------------------------- End Menu --------------------------
+		
+		# We want to catch window movements to show/hide preview window
+		root.bind( '<Configure>', self.OnFormEvent )
+		
+		root.protocol("WM_DELETE_WINDOW", lambda e=None:self.quitProgram(e))
+		
+	def ShowHideImageAttributesPane ( self, ShowIt):
+		if ShowIt:
+			if self.CurrentImage: self.photoPanedWindow.insert(0,self.LeftFrame)
+		else: 
+			try:
+				self.photoPanedWindow.forget(self.LeftFrame)
+			except TclError: pass	# Already forgotten!	
+			
+	def ViewImageAttributesPane ( self, event ):
+		if not event == 'Menu':	# Must change variable state ourselves
+			self.viewImageAttributesPane.set(not self.viewImageAttributesPane.get())
+		self.ShowHideImageAttributesPane(self.viewImageAttributesPane.get())
+		
+	def TextboxResize ( self, event ):
+		pass #print event.width
+		
+	def SavePictureorVideo ( self, event ):
+		# Create a picture class that maintains the state of the current 
+		# image. This would include the state of the camera programming
+		# just before the image was taken.
+		# Store on a PictureStack. In most cases, only one picture on
+		# the stack, but can hold more - such as a series of pictures
+		# taken in rapid sequence.
+		tkFileDialog.asksaveasfile(mode='w',defaultextension='*.jpg')
+		
+	def photoCanvasScrollStart ( self, event ):
+		if self.CurrentImage:
+			if event.state & 0x0004 == 0x0004:		# Ctrl key
+				self.InPhotoZoom = True
+				self.Image = self.CurrentImage
+				x = self.photoCanvas.canvasx(event.x)
+				y = self.photoCanvas.canvasy(event.y)
+				self.photoCanvas.create_rectangle(x,y,x+1,y+1,tags=('zoom','objs'),outline='red')
+				self.photoCanvas.config(cursor='sizing')
+			else:
+				self.photoCanvas.config(cursor='hand1')
+				self.photoCanvas.scan_mark(event.x,event.y)
+				
+	def photoCanvasScrollMove ( self, event ):
+		if self.CurrentImage:
+			if not self.InPhotoZoom: 
+				self.photoCanvas.scan_dragto(event.x,event.y,gain=3)
+			self.photoCanvasMove(event)	
+			
+	def photoCanvasButtonUp ( self, event ):
+		self.photoCanvas.config(cursor='diamond_cross')
+		if self.InPhotoZoom:
+			self.InPhotoZoom = False
+			coords = self.photoCanvas.coords('zoom')
+			# Set zoom of window.....
+			# We should account for previous levels of zoom
+			x = float(coords[0]) / float(self.CurrentImageSize[0])
+			y = float(coords[1]) /  float(self.CurrentImageSize[1]) 
+			width = float(coords[2] - coords[0]) / float(self.CurrentImageSize[0])
+			height = float(coords[3] - coords[1]) / float(self.CurrentImageSize[1])
+			self.BasicControlsFrame.SetZoom (x,y,width,height)
+			#imageself.CurrentImage
+			#self.photoCanvas.config(scrollregion=(int(coords[0]),
+				#int(coords[1]),int(coords[2]),int(coords[3])))
+			self.photoCanvas.delete("zoom")
+			
+	def photoCanvasMove ( self, event ):
+		if not self.CurrentImage: return
+
+		x = self.photoCanvas.canvasx(event.x)
+		y = self.photoCanvas.canvasy(event.y)
+		self.statusText.set('X: %d Y: %d' % (x, y))		
+			
+		size = self.CurrentImage.size
+		if x >= 0 and x <= size[0] and y >= 0 and y <= size[1]:
+			self.photoCanvas.itemconfigure('text',state='normal')
+			self.photoCanvas.coords('text',x+5,y+5)
+			self.photoCanvas.itemconfigure('text',text='(%d,%d)'%(x,y))
+		else:
+			self.photoCanvas.itemconfigure('text',state='hidden')
+
+		x0 = self.photoCanvas.canvasx(0)
+		x1 = x0 + self.photoCanvas.winfo_width()
+		y0 = self.photoCanvas.canvasy(0)
+		y1 = y0 + self.photoCanvas.winfo_height()
+		self.photoCanvas.coords('cursorx',x,y0,x,y1)
+		self.photoCanvas.coords('cursory',x0,y,x1,y)
+		if self.InPhotoZoom:
+			########### BUGGY - LOOK AT RECT TOTAL TO ANALYZE ##########
+			coords = self.photoCanvas.coords('zoom')
+			if x < coords[0]:
+				x1 = x
+				x2 = coords[2]
+			else:
+				x1 = coords[0]
+				x2 = x
+			if y < coords[1]:
+				y1 = y
+				y2 = coords[3]
+			else:
+				y1 = coords[1]
+				y2 = y
+			self.photoCanvas.coords('zoom',x1,y1,x2,y2)	
+			
+	def WheelScrollPhotoCanvas ( self, event ):
+		if event.state & 0x0004 == 0x0004:		# Ctrl key
+			if not self.CurrentImage: return
+			size = self.CurrentImage.size
+			if event.num == 4:
+				self.photoZoomScale *= 1.1
+			else:
+				self.photoZoomScale *= (1.0/1.1)
+			self.LoadImageFromStream(self.photoZoomScale)
+			
+	def TakePicture ( self, event ):
+		if self.InCaptureVideo: return
+		photoFormat = self.BasicControlsFrame.GetPhotoCaptureFormat() 
+		if photoFormat not in ['jpeg', 'png', 'bmp']:
+			tkMessageBox.showwarning("Image view not supported",
+				"Cannot directly view images in %s format"%photoFormat)
+			return
+		self.ClearPicture(None)
+		self.CameraUtils.FillCameraSettingTextBox(self)
+		self.photoCanvas.itemconfigure('cross',state='hidden')
+		self.pictureStream.seek(0)	# Use to reload / resize image
+		try:
+			self.camera.capture(self.pictureStream,format=photoFormat,
+				use_video_port=self.BasicControlsFrame.UseVideoPort.get(),
+				resize=self.BasicControlsFrame.GetResizeAfter())
+		except PiCameraRuntimeError:
+			print 'Camera capture error' # Something really bad happened
+			return	# May crash the program
+		self.LoadImageFromStream ( 1.0 )
+		self.photoCanvas.itemconfigure('objs',state='normal')
+		self.photoCanvas.tag_raise("objs") # raise Z order to topmost
+		
+	def LoadImageFromStream ( self, zoom ):
+		if self.photo: del self.photo
+		self.pictureStream.seek(0)
+		self.CurrentImage = PIL.Image.open(self.pictureStream)
+		self.CameraUtils.AddEXIFTags(self.CurrentImage)
+		self.ShowHideImageAttributesPane(self.viewImageAttributesPane.get())
+		size = self.CurrentImage.size
+		if size[0] <= 1024 and size[1] <= 768:
+			width = int(zoom*size[0])
+			height = int(zoom*size[1])
+			if width <= 1024 and height <= 768:
+				self.CurrentImage = self.CurrentImage.resize((width,height),PIL.Image.ANTIALIAS)
+		self.CurrentImageSize = self.CurrentImage.size
+		self.photo = ImageTk.PhotoImage(self.CurrentImage)
+		self.photoCanvas.delete("pic")
+		self.photoCanvas.create_image(0,0,image=self.photo,anchor='nw',tags=('pic'))
+		self.photoCanvas.config(scrollregion=self.photoCanvas.bbox(ALL))
+		self.photoCanvas.tag_raise("objs") # raise Z order to topmost
+		
+	def ToggleVideo ( self, event ):
+		self.ClearPicture(None)
+		self.InCaptureVideo = not self.InCaptureVideo
+		if self.InCaptureVideo:
+			self.TakeVideo.config(text='Stop')
+			self.time = time.time()
+			self.camera.start_recording('__TMP__.h264')
+			self.photoCanvas.itemconfigure('capture',state='normal')
+			self.after(50,self.UpdateCaptureInProgress)
+		else:
+			self.TakeVideo.config(text='Video')
+			self.camera.stop_recording()
+			self.photoCanvas.itemconfigure('capture',state='hidden')
+			cmd = 'MP4Box -fps %d -add __TMP__.h264 __TMP__.mp4'%int(self.camera.framerate)
+			print cmd
+			os.system(cmd)
+			os.remove('__TMP__.h264')
+			print 'Done'
+			
+	def UpdateCaptureInProgress ( self ):
+		if not self.InCaptureVideo: return
+		delta = time.time() - self.time
+		self.photoCanvas.itemconfigure('capture',text='Recording %.2f sec'%delta)
+		self.after(50,self.UpdateCaptureInProgress)
+		
+	def ClearPicture ( self, event ):
+		self.ShowHideImageAttributesPane(False)
+		self.CameraUtils.ClearTextBox()
+		self.photoCanvas.delete("pic")
+		if self.CurrentImage:
+			del self.CurrentImage
+			del self.photo
+		self.CurrentImage = None
+		self.photo = None
+		self.photoCanvas.itemconfigure('cross',state='normal')
+		self.photoCanvas.itemconfigure('objs',state='hidden')
+		self.photoCanvas.config(scrollregion=(0,0,1,1))
+		
+	def ViewProperties ( self, event ):
 		pass
 		
+	def PhotoCanvasResize ( self, event ):
+		size = (event.width,event.height)
+		x = self.photoCanvas.canvasx(event.x)
+		y = self.photoCanvas.canvasy(event.y)
+		# either scroll if acxtual size, or size image to fit
+		# if sizing to fit, must maintain aspect ratio
+		#try:
+			#self.photoCanvas.delete("pic")
+			## Check which is bigger, width or height
+			#if self.CurrentImage[0] <= size[0] and self.CurrentImage[1] <= size[1]:
+				#self.photo = ImageTk.PhotoImage(self.CurrentImage)
+			#elif self.CurrentImage[0] >= self.CurrentImage[1]:
+				## width greater than height
+				#resized = self.CurrentImage.resize(size)
+				#self.photo = ImageTk.PhotoImage(resized)
+			#else:
+				#resized = self.CurrentImage.resize(size)
+				#self.photo = ImageTk.PhotoImage(resized)
+
+			#self.photoCanvas.create_image(0,0,image=self.photo,anchor='nw')
+		#except: print 'Error'
+		self.photoCanvas.coords('cross1',0,0,0+size[0],0+size[1])
+		self.photoCanvas.coords('cross2',0+size[0],0,0,0+size[1])	
+		self.photoCanvas.coords('capture',0+size[0]/2,0+size[1]/2)	
+		
+	def photoCanvasEnterLeave ( self, event ):
+		if not self.CurrentImage: return
+		state1 = 'normal'		# 7/8 leave enter - getname instead
+		if int(event.type) == 8:
+			state1 = 'hidden'
+			self.statusText.set("")
+		self.photoCanvas.itemconfigure('objs',state=state1)
+
+	def CanvasMouseMove ( self, event ):
+		res = self.camera.resolution
+		canvas = self.CanvasSize
+		deltaX = 0
+		if res[0] > self.ImageCanvas.winfo_width():
+			deltaX = (res[0] - self.ImageCanvas.winfo_width()) / 2
+		elif res[0] < self.ImageCanvas.winfo_width():
+			deltaX = (self.ImageCanvas.winfo_width() - res[0]) / 2
+		else:
+			deltaX = 0
+
+		self.statusText.set('%d X: %d Y: W: %d H: %d' % \
+			(event.x,event.y,canvas[2],canvas[3]))
+		self.ImageCanvas.coords(self.CursorX,0,event.y,
+							    self.ImageCanvas.winfo_width(),event.y)
+		self.ImageCanvas.coords(self.CursorY,event.x,0,
+								event.x,self.ImageCanvas.winfo_height())
+
+	def CanvasEnterLeave ( self, event ):
+		state1 = 'normal'		# 7/8 leave enter - getname instead
+		if int(event.type) == 8:
+			state1 = 'hidden'
+			self.statusText.set("")
+		self.ImageCanvas.itemconfigure('cursors',state=state1)
+
+	def SetPreviewOn ( self ):
+		if self.PreviewOn.get() == False:
+			self.camera.stop_preview()
+			state = 'disabled'
+			self.ImageCanvas.itemconfigure('nopreview',state='normal')
+		else:
+			self.camera.start_preview(alpha=int(self.alpha.get()), \
+				fullscreen=False,window=self.CanvasSize, \
+				vflip=self.VFlipState, hflip=self.HFlipState)
+			self.ImageCanvas.itemconfigure('nopreview',state='hidden')
+			state = '!disabled'
+		self.alpha.state([state])
+		self.Hflip.config(state=state)
+		self.Vflip.config(state=state)
+
+	def AlphaChanged(self, newVal):
+		val = int(float(newVal))
+		self.camera.preview.alpha = val
+		self.alpha.focus_set()
+		
+	def ToggleHFlip ( self ):
+		self.HFlipState = not self.HFlipState
+		self.camera.preview.hflip = not self.camera.preview.hflip
+		
+	def ToggleVFlip ( self ):
+		self.VFlipState = not self.VFlipState
+		self.camera.preview.vflip = not self.camera.preview.vflip
+
+	def LoseFocus ( self, event ):
+		'''
+		The Combobox is a problem.
+		could save last two entries... if Combobox, Labelframe, Tk...
+		NO! this could be the Topwindow losing focus while the
+		Combobox has the focus.  The same effect
+		Also, the nesting may vary based on where the Combobox is in
+		the hierarcy. What I really want is to capture the <B1-Motion>
+		on the TopWindow titlebar - OR - get the widget ID to the
+		Combobox Toplevel dropdown window.
+		'''
+		if self.camera.preview and not self.AlwaysPreview and \
+			event.widget.winfo_class().lower() == 'tk' and \
+			self.root.attributes("-topmost") == 0: # TopMost window hack
+			self.camera.preview.alpha = 0
+			self.ImageCanvas.itemconfigure('nopreview',state='normal')
+			
+	def GotFocus ( self, event ):
+		if self.camera.preview and not self.AlwaysPreview and \
+			event.widget.winfo_class().lower() == 'tk' \
+			and self.PreviewOn.get() and self.ImageCanvas.winfo_height() > 50:
+			self.camera.preview.alpha = int(self.alpha.get())
+			self.ImageCanvas.itemconfigure('nopreview',state='hidden')
+
+	# We're catching the main form event to tell when a window has moved.
+	# The preview window can be blanked during this time.
+	def OnFormEvent ( self, event ):
+		# hack fix for PI running on HDTV. Related to overscan?
+		screenwidth = self.ImageCanvas.winfo_screenwidth()
+		screenheight = self.ImageCanvas.winfo_screenheight()
+		deltaWidth = 0
+		deltaHeight = 0
+		if screenwidth > 1800 and screenwidth <= 1920:
+			deltaWidth = (1920 - screenwidth) / 2
+			deltaHeight = (1080 - screenheight) / 2
+		# get size and lopcation of preview window canvas ...
+		self.CanvasSize = (self.ImageCanvas.winfo_rootx()+deltaWidth,
+			  self.ImageCanvas.winfo_rooty()+deltaHeight,
+			  self.ImageCanvas.winfo_width(),
+			  self.ImageCanvas.winfo_height())
+		# ... and reset preview window to this position
+		if self.camera.preview != None:
+			self.camera.preview.window = self.CanvasSize
+			# Hide preview window if too small
+			if self.CanvasSize[3] <= 50:
+				self.camera.preview.alpha = 0
+			elif self.PreviewOn.get():
+				self.camera.preview.alpha = int(self.alpha.get())
+		# Not sure this should be here... could place inside the
+		# preview window canvas form event. Cleaner approach. 
+		self.ImageCanvas.coords("nopreview",self.ImageCanvas.winfo_width()/2,
+								self.ImageCanvas.winfo_height()/2)
+
+	def SystemPreferences ( self, event ):
+		PreferencesDialog(self,title='System Preferences',camera=self.camera,
+			minwidth=300,minheight=500)
+		self.ControlMapping.SetControlMapping()
+
+	def KeyboardShortcuts ( self, event ):
+		KeyboardShortcutsDialog(self,title='Keyboard shortcuts')
+		
+	def PiCameraDocs ( self, event ):
+		webbrowser.open_new('http://picamera.readthedocs.org/en/release-1.10/')
+
+	def HelpAbout ( self, event ):
+		AboutDialog(self,title="About PiCamera Demonstration")
+
+	def quitProgram ( self, event ):
+		if tkMessageBox.askyesno("Quit program","Exit %s?" % self.title):
+			self.master.destroy()
+			
+	def GPIOError ( self ):
+		if not RPiGPIO:
+			tkMessageBox.showerror("GPIO Error",
+				"GPIO library not found\n" + \
+				"Please install RPi.GPIO and run this program as root.")
+		else: 
+			tkMessageBox.showerror("GPIO Error",
+				"To control the PiCamera LED, you must run this program as 'root'")	 
+				
+	def DefineAccelerators ( self, keys, char, callFunc ):
+		commandDic = {'c':'Control-','a':'Alt-','s':'Shift-','f':''}
+		cmd = '<'
+		for c in keys.lower():	# need to handle function keys too...
+			cmd = cmd + commandDic[c]
+		cmd1 = cmd
+		cmd = cmd + char.upper() + ">"
+		self.root.bind(cmd,callFunc)
+		if len(char) == 1:
+			cmd1 = cmd1 + char.lower() + ">"
+			self.root.bind(cmd1,callFunc)
+	
 class BasicControls ( BasicNotepage ):
 	def BuildPage ( self ):
 		f1 = Labelframe(self,text='Test',padding=(5,5,5,5))
@@ -530,7 +1214,8 @@ class FinerControl ( BasicNotepage ):
 		self.DrcCombo.current(0)
 		self.DrcCombo.bind('<<ComboboxSelected>>',self.DrcStrengthChanged)
 
-		f = LabelFrame(self,text='Color effects (Luminance and Chrominance - YUV420)',padding=(5,5,5,5))
+		f = LabelFrame(self,text='Color effects (Luminance and Chrominance - YUV420)',
+			padding=(5,5,5,5))
 		f.grid(row=2,column=0,columnspan=4,sticky='NEWS',pady=5)
 		f.columnconfigure(1,weight=1)
 
@@ -584,11 +1269,13 @@ class FinerControl ( BasicNotepage ):
 		AutoSensorMode.set(True)
 		# Select input mode based of Resolution and framerate:',
 		b1 = Radiobutton(f,text='Auto (Default mode 0)',variable=AutoSensorMode,
-			value=True,command=lambda:self.AutoSensorModeRadio(True),padding=(5,5,5,5))
+			value=True,command=lambda:self.AutoSensorModeRadio(True),
+			padding=(5,5,5,5))
 		b1.grid(row=1,column=0,columnspan=2,sticky='NW')
 
 		b2 = Radiobutton(f,text='Select Mode:',variable=AutoSensorMode,
-			value=False,command=lambda:self.AutoSensorModeRadio(False),padding=(5,5,5,5))
+			value=False,command=lambda:self.AutoSensorModeRadio(False),
+			padding=(5,5,5,5))
 		b2.grid(row=2,column=0,sticky='NW')
 
 		self.SensorModeCombo = Combobox(f,state='disabled')#,width=30)
@@ -1017,683 +1704,7 @@ class Annotate ( BasicNotepage ):
 		self.camera.annotate_text_size = int(float(newVal))
 		self.AnnotateTextSize.focus_set()
 
-class PiCameraControlApp ( Frame ):
-	def __init__(self, root, camera, title):
-		Frame.__init__(self, root)
-
-		self.grid(padx=5,pady=5)
-		self.root = root
-
-		self.ControlMapping = ControlMapping()
-
-		self.camera = camera
-		self.camera.start_preview(fullscreen=False,window=(0,0,10,10))
-
-		self.title = title
-		self.root.title(title)
-
-		master = root
-
-		master.rowconfigure(0,weight=1)
-		master.columnconfigure(1,weight=1)
-		master.config(padx=5,pady=5)
-		
-		#----------- Icons for Menu and Buttons ------------------------
-		self.iconClose = ImageTk.PhotoImage(PIL.Image.open("Assets/window-close.png"))
-		self.iconPrefs = ImageTk.PhotoImage(PIL.Image.open('Assets/prefs1_16x16.png'))
-		self.iconWeb = ImageTk.PhotoImage(PIL.Image.open('Assets/web_16x16.png'))
-		self.iconCamera = ImageTk.PhotoImage(PIL.Image.open('Assets/camera_16x16.gif'))
-		self.iconCameraBig = ImageTk.PhotoImage(PIL.Image.open('Assets/camera_22x22.png'))
-		self.iconVideo = ImageTk.PhotoImage(PIL.Image.open('Assets/video_16x16.gif'))
-		self.iconVideoBig = ImageTk.PhotoImage(PIL.Image.open('Assets/video_22x22.gif'))
-		#---------------------------------------------------------------
-
-		#user = expanduser('~')
-		## Make a subdirectory
-		#self.photoDirectory = '%s/Documents/PiCameraDemo/Photos/' % user
-		#if not os.path.exists(self.photoDirectory):
-			#os.makedirs(self.photoDirectory)
-			#print '%s created' % self.photoDirectory
-	
-		#self.videoDirectory = '%s/Documents/PiCameraDemo/Videos/' % user
-		#if not os.path.exists(self.videoDirectory):
-			#os.makedirs(self.videoDirectory)
-			#print '%s created' % self.videoDirectory
-		##---------------------------------------------------------
-
-		frame1 = Frame(master,padding=(5,5,5,5))
-		frame1.grid(row=0,column=0,sticky="NSEW")
-		frame1.rowconfigure(2,weight=1)
-		frame1.columnconfigure(0,weight=1)
-
-		self.AlwaysPreview = False
-			
-		n = Notebook(frame1,padding=(5,5,5,5))
-		n.grid(row=1,column=0,rowspan=2,sticky=(N,E,W,S))
-		n.columnconfigure(0,weight=1)
-
-		#-------------------- Basic Controls Mode ----------------------
-		self.BasicControlsFrame = BasicControls(n,camera)
-
-		#---------------------- Exposure Mode --------------------------
-		self.ExposureFrame = Exposure(n,camera)
-
-		#----------------- More Lower Level Control --------------------
-		self.FinerControlFrame = FinerControl(n,camera)
-
-		#----------------------- Annotate ------------------------------
-		self.AnnotateFrame = Annotate(n,camera)
-
-		n.add(self.BasicControlsFrame ,text='Basic')
-		n.add(self.ExposureFrame,text='Exposure')
-		n.add(self.FinerControlFrame,text='Finer control')
-		n.add(self.AnnotateFrame,text='Annotate/EXIF Metadata')
-
-		# ----------------------Paned Window ---------------------------
-		# Start of Image Canvas preview, camera captures,
-		#	Paned Window VERTICAL
-		#		TopFrame
-		#			Preview ImageCanvas	row Weight=1
-		#			ButtonFrame
-		#				Preview Buttons
-		#		BottomFrame
-		#			PanedWindow HORIZONTAL row 0, col 0
-		#				LeftFrame
-		#					EXIF Text
-		#				RightFrame
-		#					Photo Canvas
-		#			ButtonFrame
-		#				Picture / Video buttons
-		
-		self.pw = PanedWindow(master,orient=VERTICAL)
-		self.pw.grid(row=0,column=1,sticky="NSEW")
-		self.pw.rowconfigure(0,weight=1)
-		self.pw.columnconfigure(0,weight=1)
-		
-		TopFrame = Frame(self.pw,padding=(5,5,5,5))
-		TopFrame.grid(row=0,column=0,sticky="NEWS")
-		TopFrame.rowconfigure(0,weight=1)
-		TopFrame.columnconfigure(1,weight=1)
-
-		self.ImageCanvas = Canvas(TopFrame,width=256,height=256,
-			background=self.ControlMapping.FocusColor,cursor='diamond_cross')
-		self.ImageCanvas.grid(row=0,column=0,columnspan=2,sticky="NEWS")
-		self.CursorX = self.ImageCanvas.create_line(0,0,320,0,
-			fill='red',tags=('cursors'))
-		self.CursorY = self.ImageCanvas.create_line(0,0,0,240,
-			fill='red',tags=('cursors'))
-		self.ImageCanvas.create_text((256,256),text="Preview off",fill='blue',
-			activefill='gray',font=('Helveticar',36,"bold italic"),
-			tags=("nopreview"))
-		self.ImageCanvas.itemconfigure('nopreview',state='hidden')
-		self.ImageCanvas.bind("<Motion>",self.CanvasMouseMove)
-		self.ImageCanvas.bind("<ButtonPress>",self.CanvasMouseMove)
-		self.ImageCanvas.bind("<Enter>",self.CanvasEnterLeave)
-		self.ImageCanvas.bind("<Leave>",self.CanvasEnterLeave)
-
-		ButtonFrame = Frame(TopFrame,padding=(5,5,5,5),relief=SUNKEN)
-		ButtonFrame.grid(row=1,column=0,columnspan=2,sticky="NEWS")
-
-		self.PreviewOn = BooleanVar()
-		self.PreviewOn.set(True)
-		Checkbutton(ButtonFrame,text='Enable preview',variable=self.PreviewOn,
-			command=self.SetPreviewOn).grid(row=0,column=0,padx=5,sticky='W')
-
-		l2 = Label(ButtonFrame,text="Alpha:")
-		l2.grid(column=1,row=0,sticky='W')
-		self.alpha = Scale(ButtonFrame,from_=0,to=255,
-				command=self.AlphaChanged,orient='horizontal',length=100)
-		self.alpha.grid(row=0,column=2,sticky='E')
-		self.alpha.set(255)
-
-		self.VFlipState = False
-		self.flipVgif = ImageTk.PhotoImage(file='Assets/flipV.gif')
-		self.Vflip = Button(ButtonFrame,image=self.flipVgif,width=10,
-			command=self.ToggleVFlip,padding=(2,2,2,2))
-		self.Vflip.grid(row=0,column=3,padx=5)
-		self.HFlipState = False
-		self.flipHgif = ImageTk.PhotoImage(file='Assets/flipH.gif')
-		self.Hflip = Button(ButtonFrame,image=self.flipHgif,width=10,
-			command=self.ToggleHFlip,padding=(2,2,2,2))
-		self.Hflip.grid(row=0,column=4)
-
-		#------------------ Photo / Video Section ----------------------
-		self.pictureStream = io.BytesIO()
-		
-		BottomFrame = Frame(self.pw,padding=(5,5,5,5))
-		BottomFrame.grid(row=1,column=0,sticky="NEWS")
-		BottomFrame.rowconfigure(0,weight=1)
-		BottomFrame.columnconfigure(0,weight=1)
-		
-		self.photoPanedWindow = PanedWindow(BottomFrame,orient=HORIZONTAL)
-		self.photoPanedWindow.grid(row=0,column=0,sticky="NSEW")
-		self.photoPanedWindow.rowconfigure(0,weight=1)
-		self.photoPanedWindow.columnconfigure(0,weight=1)	
-		self.photoPanedWindow.columnconfigure(1,weight=1)	
-		
-		self.LeftFrame = Frame(self.photoPanedWindow,padding=(5,5,5,5))
-		self.LeftFrame.grid(row=0,column=0,sticky="NEWS")
-		self.LeftFrame.rowconfigure(0,weight=1)
-		self.LeftFrame.columnconfigure(0,weight=1)
-		
-		sb = Scrollbar(self.LeftFrame,orient='vertical')
-		sb.grid(row=0,column=1,sticky='NS')
-		sb1 = Scrollbar(self.LeftFrame,orient='horizontal')
-		sb1.grid(row=1,column=0,sticky='EW')		
-		text = Text(self.LeftFrame,width=37,wrap='none',
-			yscrollcommand=sb.set,xscrollcommand=sb1.set)
-		text.bind('<Configure>',self.TextboxResize)
-		text.grid(row=0,column=0,sticky='NSEW')
-		sb.config(command=text.yview)
-		sb1.config(command=text.xview)
-		text.bind("<Key>",lambda e : "break")	# ignore all keypress		
-		self.CameraUtils = CameraUtils(self.camera,self.BasicControlsFrame)
-		self.CameraUtils.SetupCameraSettingsTextbox(text)
-		
-		RightFrame = Frame(self.photoPanedWindow,padding=(5,5,5,5))
-		RightFrame.grid(row=0,column=1,sticky="NEWS")
-		RightFrame.rowconfigure(0,weight=1)
-		RightFrame.columnconfigure(0,weight=1)
-		
-		self.CurrentImage = None
-		self.photoCanvas = Canvas(RightFrame,width=50,height=50,
-			background=self.ControlMapping.FocusColor,cursor='diamond_cross')
-		self.photoCanvas.grid(row=0,column=0,sticky="NEWS")
-		self.photoCanvas.create_line(0,0,320,0,
-			fill='red',tags=('cursors','objs','cursorx'))
-		self.photoCanvas.create_line(0,0,0,240,
-			fill='red',tags=('cursors','objs','cursory'))
-		self.photoCanvas.create_line(0,0,320,0,
-			fill='lightgray',activefill='darkgray',tags=('cross','cross1'))
-		self.photoCanvas.create_line(0,0,0,240,
-			fill='lightgray',activefill='darkgray',tags=('cross','cross2'))
-		self.photoCanvas.create_text(0,0,
-			tags=('capture'),text='',
-			fill='blue',activefill='gray',anchor='center',
-			font=('Helveticar',18,"bold italic"))
-		self.photoCanvas.itemconfigure('capture',state='hidden')
-		self.photoCanvas.create_text(0,0,
-			fill='red',tags=('text','objs'),anchor='nw')
-
-		self.photoCanvas.bind('<Configure>',self.PhotoCanvasResize)
-		self.photoCanvas.bind("<ButtonPress-1>",self.photoCanvasScrollStart)
-		self.photoCanvas.bind("<B1-Motion>",self.photoCanvasScrollMove)
-		self.photoCanvas.bind("<Motion>",self.photoCanvasMove)
-		self.photoCanvas.bind("<ButtonRelease-1>",self.photoCanvasButtonUp)
-		self.photoCanvas.bind("<Enter>",self.photoCanvasEnterLeave)
-		self.photoCanvas.bind("<Leave>",self.photoCanvasEnterLeave)
-		self.InPhotoZoom = False 	# hack - 
-		# self.PhotoState = 'none', 'picture', 'zoom', 'video' ???
-
-		vsbar = Scrollbar(RightFrame,orient=VERTICAL)
-		vsbar.grid(row=0,column=1,sticky='NS')
-		vsbar.config(command=self.photoCanvas.yview)
-		self.photoCanvas.config(yscrollcommand=vsbar.set)
-						
-		hsbar = Scrollbar(RightFrame,orient=HORIZONTAL)
-		hsbar.grid(row=1,column=0,sticky='EW')
-		hsbar.config(command=self.photoCanvas.xview)
-		self.photoCanvas.config(xscrollcommand=hsbar.set)	
-		self.photoCanvas.bind("<5>",self.WheelScrollPhotoCanvas) #MouseWheel
-		self.photoCanvas.bind("<4>",self.WheelScrollPhotoCanvas) #MouseWheel
-		self.photoZoomScale	= 1.0
-
-		self.photoPanedWindow.add(self.LeftFrame)
-		self.photoPanedWindow.add(RightFrame)
-		self.photoPanedWindow.forget(self.LeftFrame)
-
-		ButtonFrame = Frame(BottomFrame,padding=(5,5,5,5))
-		ButtonFrame.grid(row=1,column=0,columnspan=3,sticky="NEWS")
-		b = Button(ButtonFrame,text='Picture',underline=0,image=self.iconCameraBig,
-			compound='left',command=lambda e=None:self.TakePicture(e),width=7)
-		b.grid(row=0,column=0,sticky='W')
-		self.InCaptureVideo = False  # hack ----
-		self.TakeVideo = Button(ButtonFrame,text='Video',underline=0,
-			image=self.iconVideoBig,compound='left',
-			command=lambda e=None:self.ToggleVideo(e),width=7)
-		self.TakeVideo.grid(row=0,column=1,sticky='W')
-		self.clearImage = ImageTk.PhotoImage(file='Assets/cancel_22x22.png')
-		b = Button(ButtonFrame,command=lambda e=None:self.ClearPicture(e),
-			image=self.clearImage,padding=(0,1,0,1))
-		b.grid(row=0,column=2,sticky='W',padx=5)
-		
-		self.pw.add(TopFrame)
-		self.pw.add(BottomFrame)
-
-		#-------------------------- Status Bar -------------------------
-		self.statusText = StringVar()
-		lbl = Label(master,textvariable=self.statusText,style='StatusBar.TLabel')
-		lbl.grid(row=1,column=0,columnspan=3,sticky="EW")
-
-		# Catch all focus events to the Top Window. Use to control
-		# whether the camera preview_window overlay is visible or not.
-		# I'm sure this will fail with Topmost windows... :(
-
-		self.root.bind('<FocusOut>',self.LoseFocus)
-		self.root.bind('<FocusIn>',self.GotFocus)
-
-		#--------------------------- Menu ------------------------------
-		menubar = Menu(root,
-			foreground='black',background='#F0F0F0',activebackground='#86ABD9',
-			activeforeground='white')
-		
-		filemenu = Menu(menubar,tearoff=0,foreground='black',background='#F0F0F0',
-		activebackground='#86ABD9',activeforeground='white')
-		filemenu.add_command(label="Save",underline=2,compound='left',
-			command=lambda e=None:self.SavePictureorVideo(e),accelerator='Ctrl+S')
-		self.DefineAccelerators('c','s',lambda e=None:self.SavePictureorVideo(e))
-		filemenu.add_separator()
-		filemenu.add_command(label="System preferences...",underline=7,
-			image=self.iconPrefs, compound='left',
-			command=lambda e=None:self.SystemPreferences(e))
-		filemenu.add_separator()
-		filemenu.add_command(label="Quit",underline=0,image=self.iconClose,
-			compound='left',accelerator='Ctrl+Q',
-			command=lambda e=None:self.quitProgram(e))
-		self.DefineAccelerators('c','q',lambda e=None:self.quitProgram(e))
-		menubar.add("cascade",label='File',underline=0,menu=filemenu)
-		
-		viewmenu = Menu(menubar,tearoff=0,foreground='black',background='#F0F0F0',
-		activebackground='#86ABD9',activeforeground='white')
-		
-		self.viewImageAttributesPane = BooleanVar()
-		self.viewImageAttributesPane.set(True)
-		viewmenu.add_checkbutton(label="Image attribute pane",underline=6,
-			accelerator='Ctrl+Shift+A',
-			onvalue=True,offvalue=False,variable=self.viewImageAttributesPane,
-			command=lambda e=0:self.ViewImageAttributesPane(e))
-		self.DefineAccelerators('cs','a',lambda e=1:self.ViewImageAttributesPane(e))
-		
-		viewmenu.add_command(label="Properties...",underline=0,accelerator='Ctrl+Alt+P',
-			image=self.iconPrefs,compound='left',
-			command=lambda e=None:self.ViewProperties(e))
-		self.DefineAccelerators('ca','p',lambda e=None:self.ViewProperties(e))
-		menubar.add("cascade",label='View',underline=0,menu=viewmenu)
-		
-		photomenu = Menu(menubar,tearoff=0,foreground='black',background='#F0F0F0',
-		activebackground='#86ABD9',activeforeground='white')
-		photomenu.add_command(label="Take picture",underline=5,
-		image=self.iconCamera,compound='left',
-			command=lambda e=None:self.TakePicture(e),accelerator='Ctrl+P')
-		self.DefineAccelerators('c','p',lambda e=None:self.TakePicture(e))
-		photomenu.add_command(label="Toggle video",underline=7,
-			image=self.iconVideo,compound='left',
-			command=lambda e=None:self.ToggleVideo(e),accelerator='Ctrl+V')
-		self.DefineAccelerators('c','v',lambda e=None:self.ToggleVideo(e))
-		photomenu.add_command(label="Clear picture",underline=0,
-			image=self.iconClose,compound='left',
-			command=lambda e=None:self.ClearPicture(e),accelerator='Ctrl+C')
-		self.DefineAccelerators('c','c',lambda e=None:self.ClearPicture(e))
-		menubar.add("cascade",label='Photo',underline=0,menu=photomenu)
-		
-		helpmenu = Menu(menubar,tearoff=0,foreground='black',background='#F0F0F0',
-		activebackground='#86ABD9',activeforeground='white')
-		helpmenu.add_command(label="Keyboard shortcuts...",underline=0,
-			command=lambda e=None:self.KeyboardShortcuts(e))
-		helpmenu.add_command(label="Picamera documentation...",underline=0,
-			command=lambda e=None:self.PiCameraDocs(e),image=self.iconWeb,compound='left')
-		helpmenu.add_separator()
-		helpmenu.add_command(label="About...",underline=0,command=lambda e=None:self.HelpAbout(e))
-		menubar.add("cascade",label='Help',underline=0,menu=helpmenu)
-		
-		root.config(menu=menubar)
-		#--------------------------- End Menu --------------------------
-		
-		# We want to catch window movements to show/hide preview window
-		root.bind( '<Configure>', self.OnFormEvent )
-		root.protocol("WM_DELETE_WINDOW", lambda e=None:self.quitProgram(e))
-	def ShowHideImageAttributesPane ( self, ShowIt):
-		if ShowIt:
-			if self.CurrentImage: self.photoPanedWindow.insert(0,self.LeftFrame)
-		else:
-			try:
-				self.photoPanedWindow.forget(self.LeftFrame)
-			except: pass		
-	def ViewImageAttributesPane ( self, event ):
-		if not event == 0:
-			self.viewImageAttributesPane.set(not self.viewImageAttributesPane.get())
-		self.ShowHideImageAttributesPane(self.viewImageAttributesPane.get())
-	def TextboxResize ( self, event ):
-		pass #print event.width
-	def SavePictureorVideo ( self, event ):
-		# Create a picture class that maintains the state of the current 
-		# image. This would include the state of the camera programming
-		# just before the image was taken.
-		# Store on a PictureStack. In most cases, only one picture on
-		# the stack, but can hold more - such as a series of pictures
-		# taken in rapid sequence.
-		tkFileDialog.asksaveasfile(mode='w',defaultextension='*.jpg')
-	def photoCanvasScrollStart ( self, event ):
-		if self.CurrentImage:
-			if event.state & 0x0004 == 0x0004:		# Ctrl key
-				self.InPhotoZoom = True
-				self.Image = self.CurrentImage
-				x = self.photoCanvas.canvasx(event.x)
-				y = self.photoCanvas.canvasy(event.y)
-				self.photoCanvas.create_rectangle(x,y,x+1,y+1,tags=('zoom','objs'),outline='red')
-				self.photoCanvas.config(cursor='sizing')
-			else:
-				self.photoCanvas.config(cursor='hand1')
-				self.photoCanvas.scan_mark(event.x,event.y)
-	def photoCanvasScrollMove ( self, event ):
-		if self.CurrentImage:
-			if not self.InPhotoZoom: 
-				self.photoCanvas.scan_dragto(event.x,event.y,gain=3)
-			self.photoCanvasMove(event)	
-	def photoCanvasButtonUp ( self, event ):
-		self.photoCanvas.config(cursor='diamond_cross')
-		if self.InPhotoZoom:
-			self.InPhotoZoom = False
-			coords = self.photoCanvas.coords('zoom')
-			# Set zoom of window.....
-			# We should account for previous levels of zoom
-			x = float(coords[0]) / float(self.CurrentImageSize[0])
-			y = float(coords[1]) /  float(self.CurrentImageSize[1]) 
-			width = float(coords[2] - coords[0]) / float(self.CurrentImageSize[0])
-			height = float(coords[3] - coords[1]) / float(self.CurrentImageSize[1])
-			self.BasicControlsFrame.SetZoom (x,y,width,height)
-			#imageself.CurrentImage
-			#self.photoCanvas.config(scrollregion=(int(coords[0]),
-				#int(coords[1]),int(coords[2]),int(coords[3])))
-			self.photoCanvas.delete("zoom")
-	def photoCanvasMove ( self, event ):
-		if not self.CurrentImage: return
-
-		x = self.photoCanvas.canvasx(event.x)
-		y = self.photoCanvas.canvasy(event.y)
-		self.statusText.set('X: %d Y: %d' % (x, y))		
-			
-		size = self.CurrentImage.size
-		if x >= 0 and x <= size[0] and y >= 0 and y <= size[1]:
-			self.photoCanvas.itemconfigure('text',state='normal')
-			self.photoCanvas.coords('text',x+5,y+5)
-			self.photoCanvas.itemconfigure('text',text='(%d,%d)'%(x,y))
-		else:
-			self.photoCanvas.itemconfigure('text',state='hidden')
-
-		x0 = self.photoCanvas.canvasx(0)
-		x1 = x0 + self.photoCanvas.winfo_width()
-		y0 = self.photoCanvas.canvasy(0)
-		y1 = y0 + self.photoCanvas.winfo_height()
-		self.photoCanvas.coords('cursorx',x,y0,x,y1)
-		self.photoCanvas.coords('cursory',x0,y,x1,y)
-		if self.InPhotoZoom:
-			########### BUGGY - LOOK AT RECT TOTAL TO ANALYZE ##########
-			coords = self.photoCanvas.coords('zoom')
-			if x < coords[0]:
-				x1 = x
-				x2 = coords[2]
-			else:
-				x1 = coords[0]
-				x2 = x
-			if y < coords[1]:
-				y1 = y
-				y2 = coords[3]
-			else:
-				y1 = coords[1]
-				y2 = y
-			self.photoCanvas.coords('zoom',x1,y1,x2,y2)	
-	def WheelScrollPhotoCanvas ( self, event ):
-		if event.state & 0x0004 == 0x0004:		# Ctrl key
-			if not self.CurrentImage: return
-			size = self.CurrentImage.size
-			if event.num == 4:
-				self.photoZoomScale *= 1.1
-			else:
-				self.photoZoomScale *= (1.0/1.1)
-			self.LoadImageFromStream(self.photoZoomScale)
-	def TakePicture ( self, event ):
-		if self.InCaptureVideo: return
-		photoFormat = self.BasicControlsFrame.GetPhotoCaptureFormat() 
-		if photoFormat not in ['jpeg', 'png', 'bmp']:
-			tkMessageBox.showwarning("Image view not supported",
-				"Cannot directly view images in %s format"%photoFormat)
-			return
-		self.ClearPicture(None)
-		self.CameraUtils.FillCameraSettingTextBox(self)
-		self.photoCanvas.itemconfigure('cross',state='hidden')
-		self.pictureStream.seek(0)	# Use to reload / resize image
-		try:
-			self.camera.capture(self.pictureStream,format=photoFormat,
-				use_video_port=self.BasicControlsFrame.UseVideoPort.get(),
-				resize=self.BasicControlsFrame.GetResizeAfter())
-		except PiCameraRuntimeError:
-			print 'Camera capture error' # Something really bad happened
-			return	# May crash the program
-		self.LoadImageFromStream ( 1.0 )
-		self.photoCanvas.itemconfigure('objs',state='normal')
-		self.photoCanvas.tag_raise("objs") # raise Z order to topmost
-	def LoadImageFromStream ( self, zoom ):
-		if self.photo: del self.photo
-		self.pictureStream.seek(0)
-		self.CurrentImage = PIL.Image.open(self.pictureStream)
-		self.CameraUtils.AddEXIFTags(self.CurrentImage)
-		self.ShowHideImageAttributesPane(self.viewImageAttributesPane.get())
-		size = self.CurrentImage.size
-		if size[0] <= 1024 and size[1] <= 768:
-			width = int(zoom*size[0])
-			height = int(zoom*size[1])
-			if width <= 1024 and height <= 768:
-				self.CurrentImage = self.CurrentImage.resize((width,height),PIL.Image.ANTIALIAS)
-		self.CurrentImageSize = self.CurrentImage.size
-		self.photo = ImageTk.PhotoImage(self.CurrentImage)
-		self.photoCanvas.delete("pic")
-		self.photoCanvas.create_image(0,0,image=self.photo,anchor='nw',tags=('pic'))
-		self.photoCanvas.config(scrollregion=self.photoCanvas.bbox(ALL))
-		self.photoCanvas.tag_raise("objs") # raise Z order to topmost
-	def ToggleVideo ( self, event ):
-		self.ClearPicture(None)
-		self.InCaptureVideo = not self.InCaptureVideo
-		if self.InCaptureVideo:
-			self.TakeVideo.config(text='Stop')
-			self.time = time.time()
-			self.camera.start_recording('__TMP__.h264')
-			self.photoCanvas.itemconfigure('capture',state='normal')
-			self.after(50,self.UpdateCaptureInProgress)
-		else:
-			self.TakeVideo.config(text='Video')
-			self.camera.stop_recording()
-			self.photoCanvas.itemconfigure('capture',state='hidden')
-			cmd = 'MP4Box -fps %d -add __TMP__.h264 __TMP__.mp4'%int(self.camera.framerate)
-			print cmd
-			os.system(cmd)
-			os.remove('__TMP__.h264')
-			print 'Done'
-	def UpdateCaptureInProgress ( self ):
-		if not self.InCaptureVideo: return
-		delta = time.time() - self.time
-		self.photoCanvas.itemconfigure('capture',text='Recording %.2f sec'%delta)
-		self.after(50,self.UpdateCaptureInProgress)
-	def ClearPicture ( self, event ):
-		self.ShowHideImageAttributesPane(False)
-		self.CameraUtils.ClearTextBox()
-		self.photoCanvas.delete("pic")
-		if self.CurrentImage:
-			del self.CurrentImage
-			del self.photo
-		self.CurrentImage = None
-		self.photo = None
-		self.photoCanvas.itemconfigure('cross',state='normal')
-		self.photoCanvas.itemconfigure('objs',state='hidden')
-		self.photoCanvas.config(scrollregion=(0,0,1,1))
-	def ViewProperties ( self, event ):
-		print "Properties"
-	def PhotoCanvasResize ( self, event ):
-		size = (event.width,event.height)
-		x = self.photoCanvas.canvasx(event.x)
-		y = self.photoCanvas.canvasy(event.y)
-		# either scroll if acxtual size, or size image to fit
-		# if sizing to fit, must maintain aspect ratio
-		#try:
-			#self.photoCanvas.delete("pic")
-			## Check which is bigger, width or height
-			#if self.CurrentImage[0] <= size[0] and self.CurrentImage[1] <= size[1]:
-				#self.photo = ImageTk.PhotoImage(self.CurrentImage)
-			#elif self.CurrentImage[0] >= self.CurrentImage[1]:
-				## width greater than height
-				#resized = self.CurrentImage.resize(size)
-				#self.photo = ImageTk.PhotoImage(resized)
-			#else:
-				#resized = self.CurrentImage.resize(size)
-				#self.photo = ImageTk.PhotoImage(resized)
-
-			#self.photoCanvas.create_image(0,0,image=self.photo,anchor='nw')
-		#except: print 'Error'
-		self.photoCanvas.coords('cross1',0,0,0+size[0],0+size[1])
-		self.photoCanvas.coords('cross2',0+size[0],0,0,0+size[1])	
-		self.photoCanvas.coords('capture',0+size[0]/2,0+size[1]/2)	
-	def photoCanvasEnterLeave ( self, event ):
-		if not self.CurrentImage: return
-		state1 = 'normal'		# 7/8 leave enter - getname instead
-		if int(event.type) == 8:
-			state1 = 'hidden'
-			self.statusText.set("")
-		self.photoCanvas.itemconfigure('objs',state=state1)
-
-	def DefineAccelerators ( self, keys, char, callFunc ):
-		commandDic = {'c':'Control-','a':'Alt-','s':'Shift-','f':''}
-		cmd = '<'
-		for c in keys.lower():	# need to handle function keys too...
-			cmd = cmd + commandDic[c]
-		cmd1 = cmd
-		cmd = cmd + char.upper() + ">"
-		self.root.bind(cmd,callFunc)
-		if len(char) == 1:
-			cmd1 = cmd1 + char.lower() + ">"
-			self.root.bind(cmd1,callFunc)
-
-	def CanvasMouseMove ( self, event ):
-		res = self.camera.resolution
-		canvas = self.CanvasSize
-		deltaX = 0
-		if res[0] > self.ImageCanvas.winfo_width():
-			deltaX = (res[0] - self.ImageCanvas.winfo_width()) / 2
-		elif res[0] < self.ImageCanvas.winfo_width():
-			deltaX = (self.ImageCanvas.winfo_width() - res[0]) / 2
-		else:
-			deltaX = 0
-
-		self.statusText.set('%d X: %d Y: W: %d H: %d' % \
-			(event.x,event.y,canvas[2],canvas[3]))
-		self.ImageCanvas.coords(self.CursorX,0,event.y,
-							    self.ImageCanvas.winfo_width(),event.y)
-		self.ImageCanvas.coords(self.CursorY,event.x,0,
-								event.x,self.ImageCanvas.winfo_height())
-
-	def CanvasEnterLeave ( self, event ):
-		state1 = 'normal'		# 7/8 leave enter - getname instead
-		if int(event.type) == 8:
-			state1 = 'hidden'
-			self.statusText.set("")
-		self.ImageCanvas.itemconfigure('cursors',state=state1)
-
-	def SetPreviewOn ( self ):
-		if self.PreviewOn.get() == False:
-			self.camera.stop_preview()
-			state = 'disabled'
-			self.ImageCanvas.itemconfigure('nopreview',state='normal')
-		else:
-			self.camera.start_preview(alpha=int(self.alpha.get()), \
-				fullscreen=False,window=self.CanvasSize, \
-				vflip=self.VFlipState, hflip=self.HFlipState)
-			self.ImageCanvas.itemconfigure('nopreview',state='hidden')
-			state = '!disabled'
-		self.alpha.state([state])
-		self.Hflip.config(state=state)
-		self.Vflip.config(state=state)
-
-	def AlphaChanged(self, newVal):
-		val = int(float(newVal))
-		self.camera.preview.alpha = val
-		self.alpha.focus_set()
-	def ToggleHFlip ( self ):
-		self.HFlipState = not self.HFlipState
-		self.camera.preview.hflip = not self.camera.preview.hflip
-	def ToggleVFlip ( self ):
-		self.VFlipState = not self.VFlipState
-		self.camera.preview.vflip = not self.camera.preview.vflip
-
-	def LoseFocus ( self, event ):
-		'''
-		The Combobox is a problem.
-		could save last two entries... if Combobox, Labelframe, Tk...
-		NO! this could be the Topwindow losing focus while the
-		Combobox has the focus.  The same effect
-		Also, the nesting may vary based on where the Combobox is in
-		the hierarcy. What I really want is to capture the <B1-Motion>
-		on the TopWindow titlebar - OR - get the widget ID to the
-		Combobox Toplevel dropdown window.
-		'''
-		if self.camera.preview and not self.AlwaysPreview and \
-			event.widget.winfo_class().lower() == 'tk' and \
-			self.root.attributes("-topmost") == 0: # TopMost window hack
-			self.camera.preview.alpha = 0
-			self.ImageCanvas.itemconfigure('nopreview',state='normal')
-	def GotFocus ( self, event ):
-		if self.camera.preview and not self.AlwaysPreview and \
-			event.widget.winfo_class().lower() == 'tk' \
-			and self.PreviewOn.get() and self.ImageCanvas.winfo_height() > 50:
-			self.camera.preview.alpha = int(self.alpha.get())
-			self.ImageCanvas.itemconfigure('nopreview',state='hidden')
-
-	# We're catching the main form event to tell when a window has moved.
-	# The preview window can be blanked during this time.
-	def OnFormEvent ( self, event ):
-		# hack fix for PI running on HDTV. Related to overscan?
-		screenwidth = self.ImageCanvas.winfo_screenwidth()
-		screenheight = self.ImageCanvas.winfo_screenheight()
-		deltaWidth = 0
-		deltaHeight = 0
-		if screenwidth > 1800 and screenwidth <= 1920:
-			deltaWidth = (1920 - screenwidth) / 2
-			deltaHeight = (1080 - screenheight) / 2
-		# get size and lopcation of preview window canvas ...
-		self.CanvasSize = (self.ImageCanvas.winfo_rootx()+deltaWidth,
-			  self.ImageCanvas.winfo_rooty()+deltaHeight,
-			  self.ImageCanvas.winfo_width(),
-			  self.ImageCanvas.winfo_height())
-		# ... and reset preview window to this position
-		if self.camera.preview != None:
-			self.camera.preview.window = self.CanvasSize
-			# Hide preview window if too small
-			if self.CanvasSize[3] <= 50:
-				self.camera.preview.alpha = 0
-			elif self.PreviewOn.get():
-				self.camera.preview.alpha = int(self.alpha.get())
-		# Not sure this should be here... could place inside the
-		# preview window canvas form event. Cleaner approach. 
-		self.ImageCanvas.coords("nopreview",self.ImageCanvas.winfo_width()/2,
-								self.ImageCanvas.winfo_height()/2)
-
-	def SystemPreferences ( self, event ):
-		PreferencesDialog(self,title='System Preferences',camera=self.camera,
-			width=300,height=500)
-		self.ControlMapping.SetControlMapping()
-
-	def KeyboardShortcuts ( self, event ):
-		KeyboardShortcutsDialog(self,title='Keyboard shortcuts')
-		
-	def PiCameraDocs ( self, event ):
-		webbrowser.open_new('http://picamera.readthedocs.org/en/release-1.10/')
-
-	def HelpAbout ( self, event ):
-		AboutDialog(self,title="About PiCamera Demonstration")
-
-	def quitProgram ( self, event ):
-		if tkMessageBox.askyesno("Quit program","Exit %s?" % self.title):
-			self.master.destroy()
-			
-	def GPIOError ( self ):
-		if not RPiGPIO:
-			tkMessageBox.showerror("GPIO Error",
-				"GPIO library not found\n" + \
-				"Please install RPi.GPIO and run this program as root.")
-		else: 
-			tkMessageBox.showerror("GPIO Error",
-				"To control the PiCamera LED, you must run this program as 'root'")	 
-
 def Run ():
-
 	try:
 		win = Tk()
 	except:
@@ -1717,7 +1728,7 @@ def Run ():
 		return
 
 	win.minsize(1024,768)
-	app = PiCameraControlApp(win,camera,title="PiCamera Demonstration")
+	app = PiCameraApp(win,camera,title="PiCamera")
 	win.mainloop()
 
 	camera.close()
