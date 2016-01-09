@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 '''
 
+########### TODO: Standaardize variable, class, member cases
+
 import time
 import webbrowser		# display the Picamera documentation
 import io
@@ -62,6 +64,9 @@ from	Mapping import *
 from	NotePage import *
 from	CameraUtils import *
 
+#
+# Main PiCameraApp Window
+#
 class PiCameraApp ( Frame ):
 	def __init__(self, root, camera, title):
 		Frame.__init__(self, root)
@@ -117,16 +122,9 @@ class PiCameraApp ( Frame ):
 		n.grid(row=1,column=0,rowspan=2,sticky=(N,E,W,S))
 		n.columnconfigure(0,weight=1)
 
-		#-------------------- Basic Controls Mode ----------------------
 		self.BasicControlsFrame = BasicControls(n,camera)
-
-		#---------------------- Exposure Mode --------------------------
 		self.ExposureFrame = Exposure(n,camera)
-
-		#----------------- More Lower Level Control --------------------
 		self.FinerControlFrame = FinerControl(n,camera)
-
-		#----------------------- Annotate ------------------------------
 		self.AnnotateFrame = Annotate(n,camera)
 
 		n.add(self.BasicControlsFrame ,text='Basic')
@@ -144,9 +142,9 @@ class PiCameraApp ( Frame ):
 		#		BottomFrame
 		#			PanedWindow HORIZONTAL row 0, col 0
 		#				LeftFrame
-		#					EXIF Text
+		#					Cameera setups, EXIF Text
 		#				RightFrame
-		#					Photo Canvas
+		#					Current Photo Canvas
 		#			ButtonFrame
 		#				Picture / Video buttons
 		
@@ -160,6 +158,7 @@ class PiCameraApp ( Frame ):
 		TopFrame.rowconfigure(0,weight=1)
 		TopFrame.columnconfigure(1,weight=1)
 
+		###### TODO: Create Canvas Class to handle generic cursors, etc
 		self.ImageCanvas = Canvas(TopFrame,width=256,height=256,
 			background=self.ControlMapping.FocusColor,cursor='diamond_cross')
 		self.ImageCanvas.grid(row=0,column=0,columnspan=2,sticky="NEWS")
@@ -313,7 +312,6 @@ class PiCameraApp ( Frame ):
 		# Catch all focus events to the Top Window. Use to control
 		# whether the camera preview_window overlay is visible or not.
 		# I'm sure this will fail with Topmost windows... :(
-
 		self.root.bind('<FocusOut>',self.LoseFocus)
 		self.root.bind('<FocusIn>',self.GotFocus)
 
@@ -472,7 +470,7 @@ class PiCameraApp ( Frame ):
 		self.photoCanvas.coords('cursorx',x,y0,x,y1)
 		self.photoCanvas.coords('cursory',x0,y,x1,y)
 		if self.InPhotoZoom:
-			########### BUGGY - LOOK AT RECT TOTAL TO ANALYZE ##########
+			########### BUGGY - LOOK AT RECT TOTAL TO ANALYZE
 			coords = self.photoCanvas.coords('zoom')
 			if x < coords[0]:
 				x1 = x
@@ -500,51 +498,63 @@ class PiCameraApp ( Frame ):
 			
 	def TakePicture ( self, event ):
 		if self.InCaptureVideo: return
+		
 		photoFormat = self.BasicControlsFrame.GetPhotoCaptureFormat() 
 		if photoFormat not in ['jpeg', 'png', 'bmp']:
 			tkMessageBox.showwarning("Image view not supported",
 				"Cannot directly view images in %s format"%photoFormat)
 			return
+			
 		self.ClearPicture(None)
 		self.CameraUtils.FillCameraSettingTextBox(self)
 		self.photoCanvas.itemconfigure('cross',state='hidden')
 		self.pictureStream.seek(0)	# Use to reload / resize image
+		
 		try:
 			self.camera.capture(self.pictureStream,format=photoFormat,
 				use_video_port=self.BasicControlsFrame.UseVideoPort.get(),
 				resize=self.BasicControlsFrame.GetResizeAfter())
 		except PiCameraRuntimeError:
-			print 'Camera capture error' # Something really bad happened
-			return	# May crash the program
+			raise 'Camera capture error' # Something really bad happened
+
 		self.LoadImageFromStream ( 1.0 )
 		self.photoCanvas.itemconfigure('objs',state='normal')
 		self.photoCanvas.tag_raise("objs") # raise Z order to topmost
 		
 	def LoadImageFromStream ( self, zoom ):
 		if self.photo: del self.photo
+		
 		self.pictureStream.seek(0)
 		self.CurrentImage = PIL.Image.open(self.pictureStream)
+		
 		self.CameraUtils.AddEXIFTags(self.CurrentImage)
 		self.ShowHideImageAttributesPane(self.viewImageAttributesPane.get())
+		
+		# resize what's displayed if user used Ctrl+mousewheel
 		size = self.CurrentImage.size
-		if size[0] <= 1024 and size[1] <= 768:
+		if size[0] <= 1024 and size[1] <= 768:	# hold max zoom level
 			width = int(zoom*size[0])
 			height = int(zoom*size[1])
 			if width <= 1024 and height <= 768:
 				self.CurrentImage = self.CurrentImage.resize((width,height),PIL.Image.ANTIALIAS)
 		self.CurrentImageSize = self.CurrentImage.size
+		
+		# Convert to canvas compatible format and store on canvas
 		self.photo = ImageTk.PhotoImage(self.CurrentImage)
 		self.photoCanvas.delete("pic")
 		self.photoCanvas.create_image(0,0,image=self.photo,anchor='nw',tags=('pic'))
 		self.photoCanvas.config(scrollregion=self.photoCanvas.bbox(ALL))
-		self.photoCanvas.tag_raise("objs") # raise Z order to topmost
+		self.photoCanvas.tag_raise("objs") # raise Z order of cursors to topmost
 		
 	def ToggleVideo ( self, event ):
 		self.ClearPicture(None)
 		self.InCaptureVideo = not self.InCaptureVideo
+		
 		if self.InCaptureVideo:
 			self.TakeVideo.config(text='Stop')
 			self.time = time.time()
+			###### TODO - do this as a stream. Can we then play it in
+			###### 'realtime' to the user as it's being recorded?
 			self.camera.start_recording('__TMP__.h264')
 			self.photoCanvas.itemconfigure('capture',state='normal')
 			self.after(50,self.UpdateCaptureInProgress)
@@ -560,9 +570,11 @@ class PiCameraApp ( Frame ):
 			
 	def UpdateCaptureInProgress ( self ):
 		if not self.InCaptureVideo: return
+		
+		# keep updating video capture time
 		delta = time.time() - self.time
 		self.photoCanvas.itemconfigure('capture',text='Recording %.2f sec'%delta)
-		self.after(50,self.UpdateCaptureInProgress)
+		self.after(50,self.UpdateCaptureInProgress)	# call again
 		
 	def ClearPicture ( self, event ):
 		self.ShowHideImageAttributesPane(False)
@@ -607,6 +619,7 @@ class PiCameraApp ( Frame ):
 		
 	def photoCanvasEnterLeave ( self, event ):
 		if not self.CurrentImage: return
+		
 		state1 = 'normal'		# 7/8 leave enter - getname instead
 		if int(event.type) == 8:
 			state1 = 'hidden'
@@ -685,8 +698,8 @@ class PiCameraApp ( Frame ):
 			
 	def GotFocus ( self, event ):
 		if self.camera.preview and not self.AlwaysPreview and \
-			event.widget.winfo_class().lower() == 'tk' \
-			and self.PreviewOn.get() and self.ImageCanvas.winfo_height() > 50:
+			event.widget.winfo_class().lower() == 'tk' and \
+			self.PreviewOn.get() and self.ImageCanvas.winfo_height() > 50:
 			self.camera.preview.alpha = int(self.alpha.get())
 			self.ImageCanvas.itemconfigure('nopreview',state='hidden')
 
@@ -701,6 +714,7 @@ class PiCameraApp ( Frame ):
 		if screenwidth > 1800 and screenwidth <= 1920:
 			deltaWidth = (1920 - screenwidth) / 2
 			deltaHeight = (1080 - screenheight) / 2
+			
 		# get size and lopcation of preview window canvas ...
 		self.CanvasSize = (self.ImageCanvas.winfo_rootx()+deltaWidth,
 			  self.ImageCanvas.winfo_rooty()+deltaHeight,

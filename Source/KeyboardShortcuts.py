@@ -25,10 +25,15 @@ from 	Dialog import *
 import PIL
 from PIL import Image, ImageTk
 
+from Utils import EvenOdd
+
+#
+# Display formatted textbox of supported keyboard shortcuts
+# 
 class KeyboardShortcutsDialog ( Dialog ):
 	def BuildDialog ( self ):
 		def AddCmdKey ( text ):
-			bg = 'even' if self.even else 'odd' 
+			bg = EvenOdd(self.even) 
 			strs = text.split(':')
 			self.text.insert(END,strs[0],("KeyboardCommand","Indent",bg))
 			strs = strs[1].split('~')

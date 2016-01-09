@@ -27,7 +27,9 @@ from	NotePage import *
 import PIL
 from PIL import Image, ImageTk
 
-# All PiCameraApp global preferences ae handled here		
+#
+# All PiCameraApp global preferences ae handled here
+#		
 class PreferencesDialog ( Dialog ):
 	def BuildDialog ( self ):		
 		self.MainFrame.columnconfigure(0,weight=1)

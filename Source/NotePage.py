@@ -26,9 +26,11 @@ import 	ttk
 from 	ttk import *
 import 	tkFont
 
+#
 # Base CLass for all NotePad pages.
+#
 class BasicNotepage ( Frame ):
-	def __init__(self, parent, camera ):
+	def __init__(self, parent, camera=None ):
 		Frame.__init__(self, parent,padding=(10,10,10,10))
 		self.grid(sticky='NSEW')
 		self.columnconfigure(0,weight=1)

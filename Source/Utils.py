@@ -22,9 +22,15 @@ from 	ttk import *
 import 	tkFont
 from tkFont import *
 from 	Dialog import *
-	
+
+#	
 # General utility functions	
-	
+#	
 def UnderConstruction ( window ):
 	Label(window,text='UNDER CONSTRUCTION',font=('Arial',14,('bold')),
 		anchor='center').grid(row=0,column=0,sticky='EW')
+
+def OnOff ( val ): return 'On' if val else 'Off'
+
+def EvenOdd ( val ): return 'even' if val else 'odd' 
+

@@ -35,7 +35,10 @@ except ImportError:
 	NoRequire = True	
 	
 from NotePage import BasicNotepage
-			
+
+#
+# General ABout Dialog. Three panes in the Notepad
+#		
 class AboutDialog ( Dialog ):
 	def BuildDialog ( self ):
 		self.MainFrame.columnconfigure(0,weight=1)
@@ -65,9 +68,9 @@ class AboutDialog ( Dialog ):
 		n.columnconfigure(0,weight=1) 
 		n.rowconfigure(0,weight=1)
 		
-		AboutPage = About(n,None)
-		CreditsPage = Credits(n,None)
-		LicensePage = License(n,None)
+		AboutPage = About(n)
+		CreditsPage = Credits(n)
+		LicensePage = License(n)
 
 		n.add(AboutPage,text='About',underline=0)
 		n.add(CreditsPage,text='Credits',underline=0)
