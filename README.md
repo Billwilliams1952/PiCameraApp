@@ -8,6 +8,8 @@ While developing a camera interface to a 32x32 RGB matrix, I was constantly prog
 
 Note: I am an old (old, old, old, ..., so very old) Windows programmer going back to the days of Windows 2.1 (Petzold). Both the Python language as well as Linux on the Raspberry Pi are new to me, so please forgive unintentional (or blatant) misuses of the API or Python coding 'standards'.
 
+![alt tag](https://cloud.githubusercontent.com/assets/3778024/20574032/44029314-b178-11e6-90f5-243d38602be0.png)
+
 ##Installation
 
 Download the Source directory and execute PiCameraApp.py. Under Wheezy, you must run as **root** in order to access the GPIO on the PiCamera. If you are not running as **root**, then the LED interface is disabled.
