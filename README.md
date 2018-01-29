@@ -14,7 +14,7 @@ Note: I am an old (old, old, old, ..., so very old) Windows programmer going bac
 
 Download the Source directory and execute PiCameraApp.py. Under Wheezy, you must run as **root** in order to access the GPIO on the PiCamera. If you are not running as **root**, then the LED interface is disabled.
 
-<<TODO>> create a setup/install procedure; i.e., setup.py.
+To run, open a terminal, change to the directory containing the source files, and enter **sudo python PiCameraApp.py**.
 
 ## API Reference
 
