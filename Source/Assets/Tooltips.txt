@@ -1,0 +1,431 @@
+
+# This is a Tooltips text file. Feel free to edit this fle to personalize
+# your tooltips for particular controls.
+
+# Copyright 2018 Bill Williams
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# Format is
+# Tooltip ID number - DO NOT CHANGE! : Tooltip text to display $
+#
+# Blank lines are ignored, and any line starting with a '#' is ignored.
+# All whitespace before and after the Tooltip ID Number and text is removed before processing.
+# Text will continue to be appended until the line ends with a dollar sign.
+# The '(C)' text is replaced with:
+#	'Thanks to: picamera.readthedocs.io/en/release-1.13/api_camera.html'
+#e.g.,
+# 35 : This is some tooltip text. $
+# 36 : This text here spans three lines. The amount of text is only limited by python
+#      and could be huge. This can go on until a the dollar sign is 
+#      found. $
+# 36 : The next tooltip. Use a newline \n to force a newline in the displayed text. $
+
+# ----------------------- TODOs ------------------------
+# ADD: An optional aspect number to control the size of the tooltip 
+# ADD: Common text. Embed in text by <Number>
+#      e.g.
+#	 300 : This is some text.\n\nNow add common text here. <25000> $
+#      25000 : This is special text that may be referenced multiple times. $
+
+# ------------- Main Window Controls ------------- 
+
+1 : Enable/disable preview image. $
+2 : Set alpha for preview window. $
+3 : Flip camera image vertically. $
+4 : Flip camera image horizontally. $
+5 : Toggle between showing preview on screen or in the PiCamera preview window. $
+6 : Adjust size of preview image on screen. $
+7 : Scroll image vertically. $
+8 : Scroll image horizontally. $
+9 : Take picture using camera settings (Ctrl+P). $
+10 : Start/Stop video capture using camera settings (Ctrl+V). $
+11 : Clear displayed picture (Ctrl+C). $
+12 : Flip displayed pictured horizontally.\n\n IN WORK $
+13 : Flip displayed picture vertically.\n\n IN WORK  $
+14 : Rotate camera image. Valid values are 0, 90, 180, 270. $
+
+#-------------- Status Bar ------------------
+40: Current X/Y location of mouse on image. $
+41: Current Analog Gain (AG) and Digital Gain (DG) from Exposure Mode settings. $
+42: Current Red Gain (RG) and Blue Gain (BG) from Auto White Balance settings. $
+43: Currently programmed Exposure Setting (ES) set under Shutter Speed. $
+44: Currently programmed Frame rate (FPS). $
+45: General messages / status. $
+
+# -------------- OK / Cancel in Dialogs --------------
+50 : Close the window. If changes were made, then save the changes. $
+51 : Close the windows without saving any changes. $
+52 : Display specific help for this window. $
+
+# ------------- Basic Controls Tab ----------------
+
+# Select port for image capture
+100 : Use Camera Still Port to capture images. This port is slower but 
+produces better quality pictures. $
+101 : Use Video Port to capture images. Allows rapid image captures up to the 
+rate of video frames. The tradeoff is that the image quality is not as good.\n\n
+Note: Exif metadata will not be included in JPEG output. This is due to an
+underlying firmware limitation. $
+102 : Turn On/Off the LED via GPIO.\n\n
+If a GPIO library is available (only RPi.GPIO is currently supported),
+and if the python process has the necessary privileges (typically this
+means running as root via sudo), this control can be used to set the
+state of the camera’s LED.\n\nAt present, the camera’s LED cannot be controlled
+on the Pi 3 (the GPIOs used to control the camera LED were re-routed to GPIO
+expander on the Pi 3). (C) $
+103 : Enable/disable removeal of video noise by applying a denoise algorithm to 
+video recordings.  $
+104 : Enable/disable removeal of image noise by applying a denoise algorithm to 
+image captures. $
+105 : Enable/disable video stabilzation $
+
+# Picture / Video Capture
+120 : Enable selection of the image/video image size from the drop down list.\n\n
+This attribute, in combination with framerate, determines the mode that the 
+camera operates in. The actual sensor framerate and resolution used by the camera 
+is influenced, but not directly set, by the selection. (C) $
+121 : List of standard image/video sizes. $
+122 : Enable selection of a non-standard image/video size using the two drop down lists. $
+123 : List of new widths for the image/video.\n\nThe size is set in 32 byte boundaries. $
+124 : List of new heights for the image/video.\n\nThe size is set in 16 byte boundaries. $
+125 : Programmed width of image/video in pixels. $
+126 : Programmed height of image/video in pixels. $
+
+# Zoom region before
+130 : Adjust the new inital X point for the preview image zoom. $
+131 : Adjust the new inital Y point for the preview image zoom. $
+132 : Adjust the new width of the zoomed area of the preview image. $
+133 : Adjust the new height of the zoomed area of the preview image. $
+134 : Reset back to full size on the preview image. $
+
+# Resize after
+140 : Do not resize image after capture. $
+141 : Resize the image after capture. Use drop down lists to select the new width/height.\n\n
+Exif metadata will not be included in JPEG output. This is due to an underlying firmware
+limitation. $
+142 : List of new widths for the resized image.\n\nThe size is set in 32 byte boundaries. $
+143 : List of new heights for the resized image.\n\nThe size is set in 16 byte boundaries. $
+
+# Quick adjustments
+150 : Adjust image brightness.\n\nRange 0 (dark) to 100 (full bright). $
+151 : Adjust image contrast.\n\nRange -100 to 100. $
+152 : Adjust image color saturation.\n\nRange -100 to 100. Default is 0. $
+153 : Adjust image sharpness (a measure of the amount of post-processing to 
+reduce or increase image sharpness).\n\nRange -100 to 100 (max sharpness). Default is 0. $
+154 : Reset quick adjustments to nominal values. $
+
+# Preprogrammed image effects
+160 : No image effect applied. $
+161 : Select image effect from drop down list. $
+162 : List of available image effects to apply to the image. $
+163 : Edit effect parameters for selected effect. $
+
+# LED / Flash Mode
+180 : Flash mode is OFF. $
+181 : Flash mode is automatically set based on exposure parameters. $
+182 : Select Flash mode from the drop down list. $
+183 : List of manuualy selectable Flash modes.\n\n
+Note: You must define which GPIO pins the camera is to use for flash and privacy 
+indicators. This is done within the Device Tree configuration which is considered 
+an advanced topic. Specifically, you need to define pins FLASH_0_ENABLE and 
+optionally FLASH_0_INDICATOR (for the privacy indicator). More information 
+can be found in\n\n
+https://picamera.readthedocs.io/en/release-1.13/recipes2.html#flash-configuration $
+
+# ------------- Exposure Tab ----------------
+# Metering Mode
+200 : List of available metering modes. All modes set up two regions, a
+center region, and an outer region. The major difference between each mode is
+the size of the center region.\n\nThe 'backlit' mode has the largest central region
+(30% of the width), while 'spot' has the smallest (10% of the width).\n\n
+The default value is 'average'. (C) $
+
+# Exposure Mode
+205 : Fully automated exposure mode. \n\nNOTE: Users should wait for the Analog and 
+Digital gain values to settle before taking a picture or video. $
+206 : Preset Exposure. Select from the drop down list.\n\nNOTE: Users should wait for
+the Analog and Digital gain values to settle before taking a picture or video. $
+207 : Manually set ISO. Select from the drop down list.\n\nNOTE: Users should wait 
+for the Analog and Digital gain values to settle before taking a picture or video. $
+208 : Exposure OFF - fixed analog and digital gains.\n\nNOTE: Setting to OFF after gains have 
+settled is a good way to ensure multiple pictures have the same exposure. $
+209 : List of preset exposure types. $
+210 : List of preset ISO values.\n\nOn the V1 camera module, non-zero ISO values attempt
+to fix overall gain at various levels. For example, ISO 100 attempts to provide an 
+overall gain of 1.0, ISO 200 attempts to provide overall gain of 2.0, etc. 
+The algorithm prefers analog gain over digital gain to reduce noise.\n\n
+On the V2 camera module, ISO 100 attempts to produce overall gain of ~1.84, 
+and ISO 800 attempts to produce overall gain of ~14.72 (the V2 camera module was 
+calibrated against the ISO film speed standard).$
+211 : Current analog gain.\n\nNOTE: Users should wait for this value to settle before taking 
+a picture or video. $
+212 : Current digital gain.\n\nNOTE: Users should wait for this value to settle before taking 
+a picture or video. $
+213 : Actual ISO. This value is caculated by (Analog_Gain / Digital_Gain) * 100.0 $
+214 : Apparent ISO. If Exposure Mode is Auto or one of the Preset Exposures, then this 
+value is Auto, else it is the Manually set value. $
+
+# Exposure compensation - DRC
+# Add radio buttons Disable / Enable
+230 : Adjust the camera’s exposure compensation level.\n\n
+The default value is 0. Larger values result in brighter images, smaller (negative) values 
+result in dimmer images. $
+231 : Disable exposure compensation (default). $
+232 : Enable exposure compensation. Adjust the amount using the slider. $
+233 : Disable Dynamic Range Compression (off). $
+234 : Select the strength of the dynamic range compression applied to the camera’s output 
+using the drop down list.\n\nWARNING: Enabling DRC will override fixed white balance gains
+(set under Auto white balance settings). $
+235 : List of available DRC strengths to apply to the camera's output. $
+
+# Auto White Balance Settings
+250 : Fully automated Auto White Balance (AWB).\n\nNOTE: Users should wait for the Red and 
+Blue gains to settle before taking a picture or video. $
+251 : Enable selection of preset scenes for AWB from the drop down list.\n\nNOTE: Users 
+should wait for the Red and Blue gains to settle before taking a picture or video. $
+252 : AWB is OFF. The user may manually set the values for Red Gain and Blue Gain.\n\n
+NOTE: Setting AWB to OFF after the gains have settled is a good way to ensure multiple 
+pictures have the same exposure. $
+253 : List of available preset AWB scenes.\n\nNOTE: Users 
+should wait for the Red and Blue gains to settle before taking a picture or video.  $
+254 : The current value of the Red Gain.\n\nWhen AWB is OFF, then the user may adjust
+the value of the Red Gain.\n\nEach gain must be between 0.0 and 8.0. 
+Typical values are between 0.9 and 1.9. $
+255 : The current value of the Blue Gain.\n\nWhen AWB is OFF, then the user may adjust
+the value of the Blue Gain.\n\nEach gain must be between 0.0 and 8.0. 
+Typical values are between 0.9 and 1.9. $
+
+# Shutter Speed
+300 : Shutter speed will be automatically determined by the auto-exposure algorithm. 
+Faster shutter times naturally require greater amounts of illumination and vice versa. $
+301 : The current exposure speed speed of the camera. If you have set shutter speed to a 
+non-zero value, then exposure speed and shutter speed should be equal. If shutter speed
+is Auto, then this value is the actual exposure speed currently in use.$
+302 : Manually set the shutter speed using the edit field and drop down selection. 
+In later firmwares, this attribute is limited by the value of the framerate attribute.\n\n 
+For example, if the Frame rate is set to 30.0 fps, the shutter speed cannot be slower than 
+33,333µs (1 / Frame rate).\n\n When shutter speed is used, the exposure speed value
+matches the shutter speed value. $
+303 : Enter the shutter speed value.\n\nNote: The programmed value is limited to either:\n\n
+a.) 1 / (fixed framerate + framerate delta), if fixed framerate.\n
+b.) 1 / (framerate range 'From' value), if framerate range. $
+304 : Select the shutter speed multiplier.\n\nNote: The programmed value is limited to 
+either:\n\n
+a.) 1 / (fixed framerate + framerate delta), if fixed framerate.\n
+b.) 1 / (framerate range 'From' value), if framerate range. $
+
+# Framerate
+310 : The currently programmed frame rate.\n\n
+If an error is detected in the selected framerate values, the color of the messages will be Red
+else Blue for no errors detected. $
+311 : Enable a fixed framerate. $
+312 : Enter the fixed framerate.\n\n
+The edit field allows the use of the '/' character to specify a fraction, e.g. 
+entering 1/6 is interpreted as 0.16666667, or 15/2.5 is 6.0.\n\n
+The lowest framerate value is fixed at 1/6 (or a 6 second maximum shutter speed), 
+the highest framerate value is fixed at 90. $
+313 : Enable a framerate range. $
+314 : Enter the framerate range 'From' value.\n\n
+The edit field allows the use of the '/' character to specify a fraction, e.g. 
+entering 1/6 is interpreted as 0.16666667, or 15/2.5 is 6.0.\n\n
+The lowest framerate range 'From' value is fixed at 1/6 (or a 6 second maximum shutter speed), 
+the highest framerate range 'From' value must be less than the framerate range 'To' value. $
+315 : Enter a framerate delta that is applied to the fixed framerate. \n\n
+The edit field allows the use of the '/' character to specify a fraction, e.g. 
+entering 1/6 is interpreted as 0.16666667, or 15/2.5 is 6.0.\n\n
+The lowest framerate delta is fixed at -10, the highest
+framerate delta is fixed at 10.$
+316 : Enter the framerate range 'To' value.\n\n
+The edit field allows the use of the '/' character to specify a fraction, e.g. 
+entering 1/6 is interpreted as 0.16666667, or 15/2.5 is 6.0.\n\n
+The lowest framerate range 'To' value must be greater than the framerate range 'From'
+value, the highest framerate range 'To' value is fixed at 90. $
+
+# ------------- Advanced Tab ----------------
+350 : Select Auto sensor mode (default).\n\nThis is an advanced property which can be 
+used to control the camera’s sensor 
+mode. By default, mode 0 is used which allows the camera to automatically select 
+an input mode based on the requested resolution and framerate. $
+351 : Select a sensor mode from the drop down list.\n\n
+Valid values are currently between Mode 1 and Mode 7. The set of valid sensor modes
+(along with the heuristic used to select one automatically) are detailed in the 
+Sensor Modes section of the documentation. (C) $
+352 : List of valid sensor modes from mode 1 to mode 7.\n\n
+NOTE: At the time of writing, setting this property does nothing unless the camera 
+has been initialized with a sensor mode other than 0. Furthermore, some mode 
+transitions appear to require setting the property twice (in a row). 
+This appears to be a firmware limitation. $
+360: Set the clock mode to 'reset'.\n\n
+This is an advanced property which can be used to control the nature of the frame 
+timestamps available from the frame property. When this is “reset” (the default) 
+each frame’s timestamp will be relative to the start of the recording. (C) $
+361: Set the clock mode to 'raw'.\n\n
+This is an advanced property which can be used to control the nature of the frame 
+timestamps available from the frame property. When this is 
+“raw”, each frame’s timestamp will be relative to the last initialization of the camera.
+(C) $
+362 : The camera’s timestamp is a 64-bit integer representing the number of microseconds 
+since the last system boot. When the camera’s clock_mode is 'raw' the values returned 
+by this attribute are comparable to those from the frame timestamp attribute. (C) $
+363 : Statistics will be calculated from the preceding preview frame (this also 
+applies when the preview is not visible). $
+364 : Statistics will be calculated from the captured image itself.\n\n
+The advantages to calculating scene statistics from the captured image are that 
+time between startup and capture is reduced as only the AGC (automatic gain control) 
+has to converge. The downside is that processing time for captures increases and 
+that white balance and gain won’t necessarily match the preview.\n\n
+Warning: Enabling the still statistics pass will override fixed white balance gains. (C) $
+370 : Remove any color effect applied to the camera. $
+371 : Set the color effect applied to the camera using the three sliders.\n\n
+For example, to make the image black and white set both U and V slider values to 128 
+(center of the slider range). $
+372 : Adjust the luminance ('Y') applied to the color effect. This has about the same affect as
+adjusting the Brightness slider on the Basic Controls tab. $
+373 : Adjust the 'U' chromiance value of the color effect. Range is from 0 to 255. $
+374 : Adjust the 'V' chromiance value of the color effect. Range is from 0 to 255. $
+375 : The current YUV value of the color effect applied to the camera. \n\n
+'Y' is the Brightness, 'U' and 'V' are the chromiance values from the sliders. $
+376 : The RGB value of the color effect applied to the camera.\n\n
+RGB is calculated from YUV as follows:\n
+Red = Clamp(Y + 1.370705 * (V-128))\n
+Green = Clamp(Y - 0.337633 * (U-128) - 0.698001 * (V-128))\n
+Blue = Clamp(Y + 1.732446 * (U-128)) $
+377 : Current color effect. The effect is also shown in the preview window. $
+
+# ------------- Timelapse Tab ----------------
+1000 : NOTHING $
+
+#-------------- Photo Params Dialog -----------------
+2000 : Defines the quality of the JPEG encoder as an integer ranging from 1 to 100. 
+Defaults to 85. \n\n
+Note: JPEG quality is not a percentage and definitions of quality vary widely. (C) $
+2001 : Current value of JPEG encoder quality. $
+2010 : Defines the restart interval for the JPEG encoder as a number of JPEG MCUs. 
+The actual restart interval used will be a multiple of the number of MCUs per row 
+in the resulting image. (C) $
+2015 : No thumbnail is included in the EXIF metadata. $
+2020 : Defines the size and quality of the thumbnail to embed in the Exif metadata. 
+Specifying None disables thumbnail generation. Otherwise, specify a tuple of 
+(width, height, quality). Defaults to (64, 48, 35). (C) $
+2021 : Select the width of the embedded thumbnail image.\n\n
+For best results, the width to height ratio should closely match the image width to height
+ratio. $
+2022 : Select the height of the embedded thumbnail image.\n\n
+For best results, the width to height ratio should closely match the image width to height
+ratio.  $
+2023 : Defines the quality of the thumbnail. Defaults to 40.\n\n
+See JPEG quality for more information. $
+2030 : No Bayer data is included in Exif metadata. $
+2031 : Raw bayer data from the camera’s sensor is included in the Exif metadata. $
+2100 : Enable / disable including EXIF metadata when the quick image is saved.\n\n
+Note: EXIF data is always included in picamera JPEG files. This option pertains to
+saving the image that is displayed in the photo viewer pane. The PILLOW library is
+used to save the image. At this point, the EXIF data can be included or excluded
+ from the saved image.\n\n
+Any JPEG files that are saved immediately using picamera functions will always have EXIF
+data. $
+2110 : Enter text that is included in the JPEG EXIF metadata. The data is saved under
+the tag 'EXIF.UserComment'. $
+
+#-------------- Video Params Dialog -----------------
+3000 : Select the H.264 profile to use for encoding. Defaults to ‘high’, but can be 
+one of ‘baseline’, ‘main’, ‘extended’, ‘high’, or ‘constrained’. $
+3001 : The H.264 level to use for encoding. Defaults to ‘4’, but can be any H.264 level 
+up to ‘4.2’. $
+3002 : The key frame rate (the rate at which I-frames are inserted in the output).\n\n
+Select None (default).\n
+Select Single initial I-frame, and then only P-frames subsequently.\n
+Select Frames between I-frames. The number of frames is entered in the edit field.\n\n
+Note: split_recording() will fail in this mode. (C) $
+3003 : The number of frames between I-Frames. $
+3004 : Select the key frame format (the way in which I-frames will be inserted into 
+the output stream). Defaults to None, but can be one of ‘cyclic’, ‘adaptive’, ‘both’, 
+or ‘cyclicrows’. $
+3005 : The encoder should output SPS/PPS headers within the stream to 
+ensure GOPs (groups of pictures) are self describing. This is important for streaming 
+applications where the client may wish to seek within the stream, and enables the use 
+of split_recording(). (C) $
+3006 : Do not output SPS/PPS headers within the stream. $
+3007 : The encoder should include “Supplemental Enhancement Information” within the 
+output stream. $
+3008 : Do not include “Supplemental Enhancement Information” data within output 
+stream. $
+3009 : The encoder includes the camera’s framerate in the SPS header. $
+3010 : Do not include the camera’s framerate in the SPS header. $
+3011 : No motion vector estimation data is output. $
+3012 : Motion vector estimation data is output to the selected file. $
+3013 : Select a file to which to save motion vector estimation data. $
+3014 : Currently selected file for saving motion vector estimation data. $
+
+#-------------- Image Effects Dialog ---------------
+4000 : Control the quantization steps for the image. Valid values are 2 to 32, 
+and the default is 4. $
+4001 : Current quantization level. $
+4010 : Set the size of the blur kernel. Valid values are 1 or 2. $
+4011 : Current blur kernel size. $
+4020 : Select the quadrant of the U/V space from which to retain chroma.\n\n 
+0=green, 1=red/yellow, 2=blue, 3=purple.\n\nThere is no default; this effect 
+does nothing until parameters are set. $
+4030 : Select the direction of the colorswap.\n\n
+Swap RGB to BGR or swap RGB to BRG. $
+
+# ------------- Annotation Dialog ----------------
+400 : Disable text annotation on the preview or image. $
+401 : Enable text annotation on the preview or image. Enter the text in the edit field. $
+402 : Enable / disable adding a timestamp on the preview and image. The timestamp format
+may be modified by selecting File | Preferences... then selecting the Interface tab. $
+403 : Text to annotate on the preview and image. $
+404 : Adjust text annotation size from 6 to 150. The default is 32. $
+405 : No background color is applied to the annotation text output. $
+406 : Select of background color for the annotation text output. $
+407 : Display a color chooser dialog for the background color. $
+408 : Use the default white color for the annotation text output. $
+409 : Select of text color for the annotation text output. The underlying 
+firmware does not directly support setting all components of the text color,
+only the Y’ component of a Y’UV tuple. This is roughly (but not precisely) 
+analogous to the “brightness” of a color, so you may choose to think of 
+this as setting how bright the annotation text will be relative to its
+background. (C) $
+410 : Adjust the relative 'brightness' of the annotation text color from 
+black to white.\n\nThe Y component of the YUV color tuple is varied from
+0.0 to 1.0 while keeping the U and V components 0. $
+411 : Enables / disables annotating the frame number. $
+
+#----------------- Preferences Dialog -------------------
+# General tab
+6000 : Select the default directory for saving images. $
+6001 : Current default directory for saving images. $
+6002 : Select the default directory for saving videos. $
+6003 : Current default directory for saving videos. $
+6004 : Select the default directory for saving text data, sample scrpts, etc. $
+6005 : Current default directory for saving text data, sample scrpts, etc. $
+6010 : List of available image save formats. $
+6011 : Edit image capture parameters for the selected image format.$
+6020 : List of available video save formats. $
+6021 : Edit video capture parameters for the selected video format.$
+
+6050 : Enter the default date/time format string to be used for the timestamp. $
+6051 : Current default timestamp format. $
+6052 : Get web help on date/time format commands. $
+
+6060 : Enable/disable adding timestamp to photo names when saving. $
+6061 : Enable/disable adding timestamp to video names when saving. $
+
+# Interface tab
+6100 : List of available 'themes' to apply to the PiCameraApp user interface. $
+6110 : Enable/disable tooltips. $
+6111 : Enable/disable showing the tip number in the tooltips.\n\nThis is a debug
+option. $
+6112 : Select the amount of delay before the tooltip is shown once the mouse starts
+hovering over a control/widget. $
+6113 : Current amount of tooltip delay. $
+
+# Other tab
+
