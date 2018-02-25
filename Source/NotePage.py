@@ -18,25 +18,60 @@ try:
 except ImportError:
 	from tkinter import *
 
-from tkColorChooser import askcolor
+try:
+	from 		tkColorChooser import askcolor
+except ImportError:
+	from		tkinter.colorchooser import askcolor
+try:
+	import 	tkFileDialog
+except ImportError:
+	import	tkinter.filedialog
+try:
+	import 	tkMessageBox as MessageBox
+except ImportError:
+	import	tkinter.messagebox as MessageBox
+try:
+	import 	ttk
+	from 		ttk import *
+except ImportError:
+	from tkinter import ttk
+	#from 		ttk import *
+try:
+	import 	tkFont
+except ImportError:
+	import	tkinter.font
+
 from Utils import UnderConstruction
 
-import 	tkMessageBox
-import 	ttk
-from 	ttk import *
-import 	tkFont
-
 #
-# Base CLass for all NotePad pages.
+# Base Class for all NotePad pages.
 #
 class BasicNotepage ( Frame ):
-	def __init__(self, parent, camera=None ):
-		Frame.__init__(self, parent,padding=(10,10,10,10))
+	def __init__(self, parent, camera=None, cancel=None, ok=None,
+					 rowconfig=False, colconfig=True, data = None ):
+		ttk.Frame.__init__(self, parent,padding=(10,10,10,10))
 		self.grid(sticky='NSEW')
-		self.columnconfigure(0,weight=1)
+		if colconfig is True:
+			self.columnconfigure(0,weight=1)
+		if rowconfig is True:
+			self.rowconfigure(0,weight=1)
 		self.camera = camera
+		self.parent = parent
+		self.CancelButton = cancel
+		self.OkButton = ok
+		self.data = data
+		self.init = True	# disable SomethingChanged
 		self.BuildPage()
-	def BuildPage ( self ): 		# Overide this!
+		self.init = False
+		self.Changed = False
+	def BuildPage ( self ): 				# MUST Overide this!
 		UnderConstruction(self)
-	def Reset ( self ):	pass # Override this if needed
-
+	def SomethingChanged ( self, val ):	# Can override but call super!
+		if self.init: return
+		self.Changed = True
+		if self.CancelButton != None:
+			self.CancelButton.config(state='normal') #'!disabled')
+			if self.OkButton != None:
+				self.OkButton.config(text='Save')
+	def SaveChanges ( self ):				# MUST override this!
+		MessageBox.showwarning("SaveChanges", "SaveChanges not implemented!")

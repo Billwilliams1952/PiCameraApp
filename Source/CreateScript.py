@@ -10,5 +10,6 @@ except ImportError:
 def OutputPythonScript ( camera ):
 	# Open file
 	# Loop through options and change
+	pass
 	
 

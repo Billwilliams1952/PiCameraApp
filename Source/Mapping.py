@@ -16,8 +16,32 @@ try:
 	from Tkinter import *
 except ImportError:
 	from tkinter import *
-import 	ttk
-from 	ttk import *
+try:
+	from 		tkColorChooser import askcolor
+except ImportError:
+	from		tkinter.colorchooser import askcolor
+try:
+	import 	tkFileDialog as FileDialog
+except ImportError:
+	import	tkinter.filedialog as FileDialog
+try:
+	import 	tkMessageBox as MessageBox
+except ImportError:
+	import	tkinter.messagebox as MessageBox
+try:
+	import 	ttk
+	from 		ttk import *
+except ImportError:
+	from		tkinter import ttk
+	from		tkinter.ttk import *
+try:
+	import 	tkFont			as Font
+except ImportError:
+	import	tkinter.font	as Font
+
+#
+# 	colors : https://wiki.tcl.tk/37701
+#
 
 class ControlMapping ( ):
 	def __init__ ( self ):
@@ -26,33 +50,35 @@ class ControlMapping ( ):
 		self.NoFocusNoMouseOverColor = 'white'
 		self.SetControlMapping()
 	def SetControlMapping ( self ):
+		#Style().configure('.', font=('Helvetica', 12)) # all
 		Style().configure('RedMessage.TLabel',font=('Arial',10,"italic"),foreground='red')
+		# These dont work since they're overriden by the map later on... ???
+		Style().configure('Error.TEntry',background='red',foreground='white')
+		Style().configure('OK.TEntry',background='white',foreground='black')
 		Style().configure('DataLabel.TLabel',foreground='blue',font=('Arial',10))
 		Style().configure('StatusBar.TLabel',background=self.FocusColor,relief=SUNKEN)
-		Style().configure('TPanedwindow',background='gray',showhandle=True,handlepad=30,sashwidth=20,sashpad=20)
-		
-		Style().map('TPanedwindow',
-			background = [
-						  ('active',self.FocusColor),
-						  ('!active','lightgray'),
-						  ],
-				   )	# close map
+		Style().configure('TMenu',background='white',activeforeground='lightblue')
 		'''
-		Can't seem to get a foucs highlight around some of the controls. 
+		Can't seem to get a foucs highlight around some of the controls.
 		So I'm using color changes to show focus/tab stops.
 		Also, the Scale does not seem to get focus by clicking on it
 		Need to force focus when the user clicks on it
-		'''		
+		'''
+		Style().map('TPanedwindow',
+			background = [
+								('!active','#f0f0ff'),
+							 ],
+			)
 		Style().map('TCombobox',
 			fieldbackground = [
-							  ('focus','!disabled',self.FocusColor), 
+							  ('focus','!disabled',self.FocusColor),
 							  ('!focus','active','!disabled',self.NoFocusMouseOverColor),
 							  ('!focus','!active','!disabled',self.NoFocusNoMouseOverColor),
 							 #('disabled','lightgray'), # Use foreground
 							  ],
 			foreground = [
 						 ('disabled','gray'),
-						 ('!disabled', 'black') 
+						 ('!disabled', 'black')
 						 ],
 			selectbackground = [
 							   ('focus','!disabled',self.FocusColor),
@@ -68,17 +94,19 @@ class ControlMapping ( ):
 							   ('!disabled', 'black')
 							   ],
 				   )	# close map
-					
+
 		Style().map('TEntry',# This one is just for 'look and feel'
 			fieldbackground = [
-							  ('focus','!disabled',self.FocusColor),
-							  ('!focus','active','!disabled',self.NoFocusMouseOverColor),
-							  ('!focus','!active','!disabled',self.NoFocusNoMouseOverColor),
+							  ('focus','!disabled', '!invalid' ,self.FocusColor),
+							  ('!focus','active','!disabled','!invalid', self.NoFocusMouseOverColor),
+							  ('!focus','!active','!disabled','!invalid',self.NoFocusNoMouseOverColor),
+							  ('invalid', '#FF0000')
 							 #('disabled','lightgray'),
 							  ],
 			foreground = [
-						 ('disabled','gray'),
-						 ('!disabled', 'black') 
+						 ('disabled', '!invalid', 'gray'),
+						 ('!disabled', '!invalid', 'black')
+						 #('invalid', self.NoFocusNoMouseOverColor)
 						 ],
 			#background = [
 						  #('focus','!disabled',self.FocusColor),
@@ -97,7 +125,7 @@ class ControlMapping ( ):
 							   ('focus','white'),
 							   ],
 				   ) # close map
-				   
+
 		#Style().map('TMenubutton',# This one is just for 'look and feel'
 			#fieldbackground = [
 							  #('focus','!disabled',self.FocusColor),
@@ -107,7 +135,7 @@ class ControlMapping ( ):
 							  #],
 			#foreground = [
 						 #('disabled','gray'),
-						 #('!disabled', 'black') 
+						 #('!disabled', 'black')
 						 #],
 			#background = [
 						  #('focus','!disabled',self.FocusColor),
@@ -126,8 +154,8 @@ class ControlMapping ( ):
 							   #('focus','white'),
 							   #],
 				   #) # close map
-				   
-		Style().map("Horizontal.TScale", 
+
+		Style().map("Horizontal.TScale",
 			troughcolor = [
 						  ('focus','!disabled',self.FocusColor),
 						  ('!focus','active','!disabled',self.NoFocusMouseOverColor),
@@ -135,13 +163,22 @@ class ControlMapping ( ):
 						  ('disabled','lightgray'),
 						  ],
 				   ) # close map
-					
-		Style().map("Vertical.TScale", 
+
+		Style().map("Vertical.TScale",
 			troughcolor = [
 						  ('focus','!disabled',self.FocusColor),
 						  ('!focus','active','!disabled',self.NoFocusMouseOverColor),
 						  ('!focus','!active','!disabled',self.NoFocusNoMouseOverColor),
 						  ('disabled','lightgray'),
 						  ],
-				   ) # close map	
+				   ) # close map
+
+		Style().map("TMenu",
+			background = [
+						  ('focus','!disabled',self.FocusColor),
+						  ('!focus','active','!disabled',self.NoFocusMouseOverColor),
+						  ('!focus','!active','!disabled',self.NoFocusNoMouseOverColor),
+						  ('disabled','lightgray'),
+						  ],
+				   ) # close map
 
