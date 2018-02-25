@@ -2,6 +2,8 @@
 
 PiCameraApp: A graphical user interface (GUI) for the Picamera library written in Python using Tkinter / ttk.
 
+# IN WORK WITH. DO NOT DOWNLOAD AT THIS TIME
+
 ## Motivation
 
 While developing a camera interface to a 32x32 RGB matrix, I was constantly programming the Picamera in code to test options. I decided to develop a GUI that provides an interface to all of the Picamera's API. Since I haven't done much GUI programming in Linux, I used the Tkinter API. 
