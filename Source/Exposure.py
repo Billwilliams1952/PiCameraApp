@@ -116,9 +116,9 @@ class Exposure ( BasicNotepage ):
 		f.grid(row=1,column=2,sticky='NS',pady=5) # was 4, columnspan=3,
 		b = MyBooleanVar(True)
 		self.AutoExposureRadio = MyRadio(f,'None (Default)',True,b,
-					self.ExposureCompButton,0,0,'W',span=2,tip=10000)
+					self.ExposureCompButton,0,0,'W',span=2,tip=231)
 		MyRadio(f,'Amount:',False,b,
-					self.ExposureCompButton,1,0,'W',tip=10000)
+					self.ExposureCompButton,1,0,'W',tip=232)
 		self.fstop = ttk.Label(f,width=16,padding=(5,5,5,5),style='DataLabel.TLabel')
 		self.fstop.grid(row=2,column=1,sticky='W')
 		self.ExpCompSlider = ttk.Scale(f,from_=-25,to=25,length=100,
@@ -256,18 +256,20 @@ class Exposure ( BasicNotepage ):
 		ok1Cmd = (self.register(self.ValidateFramerateRangeFrom),'%P')
 		self.FramerateRangeFromText = MyStringVar("1/6")
 		self.FramerateFrom = Entry(f,width=6,validate='all',
-			validatecommand=ok1Cmd,textvariable=self.FramerateRangeFromText)
+			textvariable=self.FramerateRangeFromText)
 		self.FramerateFrom.grid(row=2,column=1,sticky='W')
 		ToolTip(self.FramerateFrom,314)
 		Label(f,text='FPS').grid(row=2,column=2,sticky='W')
 		Label(f,text='To:').grid(row=2,column=3,sticky='E')
 		self.FramerateRangeToText = MyStringVar("30.0")
-		ok1Cmd = (self.register(self.ValidateFramerateRangeTo),'%P')
+		ok2Cmd = (self.register(self.ValidateFramerateRangeTo),'%P')
 		self.FramerateTo = Entry(f,width=6,validate='all',
-			validatecommand=ok1Cmd,textvariable=self.FramerateRangeToText)
+			validatecommand=ok2Cmd,textvariable=self.FramerateRangeToText)
 		self.FramerateTo.grid(row=2,column=4,sticky='W')
 		ToolTip(self.FramerateTo,316)
 		l = Label(f,text='FPS').grid(row=2,column=5,sticky='W')
+
+		self.FramerateFrom.config(validatecommand=ok1Cmd)
 
 		self.AutoExposureRadio.invoke()
 		self.DrcChecked(False)
@@ -488,7 +490,8 @@ class Exposure ( BasicNotepage ):
 					else:
 						if den > 0:	num = num / den
 						else:			num = None
-		num = num if num >= minVal and num <= maxVal else None
+		if num is not None:
+			num = num if num >= minVal and num <= maxVal else None
 		self.FrameRate.config(style='RedMessage.TLabel' if num is None \
 									  else 'DataLabel.TLabel')
 		return num
@@ -501,16 +504,19 @@ class Exposure ( BasicNotepage ):
 	def ValidateRange ( self, fromText, toText ):
 		fromVal = self.ValidateEntry(fromText, 1.0/6.0, 90.0 )
 		toVal = self.ValidateEntry(toText, 1.0/6.0, 90.0 )
-		if fromVal >= 1.0/6.0 and fromVal < toVal and toVal <= 90.0:
+		if fromVal != None and toVal != None and \
+			fromVal >= 1.0/6.0 and fromVal < toVal and toVal <= 90.0:
 			self.camera.framerate_range = (fromVal,toVal)
 			self.ValidateShutterSpeed(None)
 			self.FrameRate.config(style='DataLabel.TLabel')
 		else:
 			self.FrameRate.config(style='RedMessage.TLabel')
 	def ValidateFramerateRangeFrom ( self, text ):
+		print (text,self.FramerateRangeToText.get())
 		self.ValidateRange(text,self.FramerateRangeToText.get())
 		return True
 	def ValidateFramerateRangeTo ( self, text ):
+		print (self.FramerateRangeFromText.get(),text)
 		self.ValidateRange(self.FramerateRangeFromText.get(),text)
 		return True
 	def ValidateFramerateDelta ( self, text ):
