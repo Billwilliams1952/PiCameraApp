@@ -24,6 +24,16 @@ Download the Source directory and execute PiCameraApp.py. Under Wheezy, you must
 
 To run, open a terminal, change to the directory containing the source files, and enter **sudo python PiCameraApp.py**.
 
+## Known Issues **
+
+| Issue      | Description / Workaround                               |
+| :--------- | :----------------------------------------------------- |
+| LED | The led_pin parameter can be used to specify the GPIO pin which should be used to control the camera’s LED via the led attribute. If this is not specified, it should default to the correct value for your Pi platform. At present, the camera’s LED cannot be controlled on the Pi 3 (the GPIOs used to control the camera LED were re-routed to GPIO expander on the Pi 3). There are circumstances in which the camera firmware may override an existing LED setting. For example, in the case that the firmware resets the camera (as can happen with a CSI-2 timeout), the LED may also be reset. If you wish to guarantee that the LED remain off at all times, you may prefer to use the disable_camera_led option in config.txt (this has the added advantage that sudo privileges and GPIO access are not required, at least for LED control). |
+| framerate_range and H264 video | The App would raise an exception when attempting to cature H264 video when frasmerate_range was selected. The exception complained the framerate_delta could not be specified with framerate_range? For now, I don't allow capturing H264 videos with framerate_range selected. |
+| framerate and framerate_delta error checking | There are cases where the code may not catch an exception. Avoid setting framerate and framerate_delta values that could add to numbers less than or equal to zero.  A future update will try to fix this issue.
+| | |
+
+
 ## API Reference
 
 PiCameraApp has been developed using Python ver 2.7. In addition, it uses the following additonal Python libraries:
@@ -32,7 +42,7 @@ PiCameraApp has been developed using Python ver 2.7. In addition, it uses the fo
 | :--------- | :-------------------------------------------------- |
 | picamera   | The python interface to the PiCamera hardware. See https://picamera.readthedocs.io/en/release-1.13/install.html |
 | RPi.GPIO   | Required to toggle the LED on the camera. Can get it at http://www.raspberrypi-spy.co.uk/2012/05/install-rpi-gpio-python-library/ |
-| PIL / Pillow | The Pillow fork of the Python Image Library. One issue is with PIL ImageTk under Python 3.x. It was not installed on my RPI. If you have similar PIL Import Errors use: **sudo apt-get install python3-pil.imagetk**. |
+| PIL / Pillow | The Pillow fork of the Python Image Library. One issue is with PIL ImageTk under Python 3.x. It was not installed on my RPI. If you have similar PIL Import Errors use:  **sudo apt-get install python3-pil.imagetk**. |
 |     |    | 
 
 ![about](https://user-images.githubusercontent.com/3778024/36648694-71283a1c-1a5c-11e8-9c85-ec1f07218cca.png)
