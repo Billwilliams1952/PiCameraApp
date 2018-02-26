@@ -512,11 +512,9 @@ class Exposure ( BasicNotepage ):
 		else:
 			self.FrameRate.config(style='RedMessage.TLabel')
 	def ValidateFramerateRangeFrom ( self, text ):
-		print (text,self.FramerateRangeToText.get())
 		self.ValidateRange(text,self.FramerateRangeToText.get())
 		return True
 	def ValidateFramerateRangeTo ( self, text ):
-		print (self.FramerateRangeFromText.get(),text)
 		self.ValidateRange(self.FramerateRangeFromText.get(),text)
 		return True
 	def ValidateFramerateDelta ( self, text ):

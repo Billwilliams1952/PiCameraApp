@@ -163,12 +163,12 @@ class PiCameraApp ( Frame ):
 		self.BasicControlsFrame = BasicControls(n,camera)
 		self.ExposureFrame = Exposure(n,camera)
 		self.FinerControlFrame = FinerControl(n,camera)
-		self.TimelapseFrame = Timelapse(n,camera)
+		#self.TimelapseFrame = Timelapse(n,camera)
 
 		n.add(self.BasicControlsFrame ,text='Basic',underline=0)
 		n.add(self.ExposureFrame,text='Exposure',underline=0)
 		n.add(self.FinerControlFrame,text='Advanced',underline=0)
-		n.add(self.TimelapseFrame,text='Time lapse',underline=0)
+		#n.add(self.TimelapseFrame,text='Time lapse',underline=0)
 
 		self.FinerControlFrame.PassControlFrame(self.BasicControlsFrame)
 
@@ -486,10 +486,10 @@ class PiCameraApp ( Frame ):
 			onvalue=True,offvalue=False,variable=self.ViewStatusBarBoolean,
 			command=lambda e='Menu':self.ViewStatusBar(e))
 
-		viewmenu.add_command(label="Properties...",underline=0,accelerator='Ctrl+Alt+P',
-			image=self.iconPrefs,compound='left',
-			command=lambda e=None:self.ViewProperties(e))
-		self.DefineAccelerators('ca','p',lambda e=None:self.ViewProperties(e))
+		#viewmenu.add_command(label="Properties...",underline=0,accelerator='Ctrl+Alt+P',
+			#image=self.iconPrefs,compound='left',
+			#command=lambda e=None:self.ViewProperties(e))
+		#self.DefineAccelerators('ca','p',lambda e=None:self.ViewProperties(e))
 		menubar.add("cascade",label='View',underline=0,menu=viewmenu)
 
 		photomenu = Menu(menubar,tearoff=0,foreground='black',background='#F0F0F0',
