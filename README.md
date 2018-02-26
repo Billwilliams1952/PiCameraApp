@@ -44,8 +44,8 @@ To run, open a terminal, change to the directory containing the source files, an
 | Output Samples | Allow the user to generate a simple Python script that will program the camera and take a still image or video. |
 | INI File | Have a configuration file that saves / restores Preferences |
 | Time Delay | Support programming the camera to take still/videos every <time>, delaying <time> until <number> or <end time> is reached. |
-| GPIO Support | Better suport the LED GPIO functions. Also, allow the user to specify GPIO pin(s) that can be toggled (or held
- high/low) while a still image or video capture is in progress. | 
+| GPIO Support | Better suport the LED GPIO functions. Also, allow the user to specify GPIO pin(s) that can be toggled (or held high or low) while a still image or video capture is in progress. | 
+| | |
 
 ## API Reference
 
