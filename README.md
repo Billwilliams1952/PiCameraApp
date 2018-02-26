@@ -32,7 +32,7 @@ PiCameraApp has been developed using Python ver 2.7. In addition, it uses the fo
 | :--------- | :-------------------------------------------------- |
 | picamera   | The python interface to the PiCamera hardware. See https://picamera.readthedocs.io/en/release-1.13/install.html |
 | RPi.GPIO   | Required to toggle the LED on the camera. Can get it at http://www.raspberrypi-spy.co.uk/2012/05/install-rpi-gpio-python-library/ |
-| PIL | The Python Image Library. |
+| PIL / Pillow | The Pillow fork of the Python Image Library. |
 |     |    | 
 
 ## License
