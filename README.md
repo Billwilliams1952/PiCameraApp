@@ -10,7 +10,7 @@ Note: I am an old (old, old, old, ..., so very old) Windows programmer going bac
 
 ## Updates
 
-This version should work under Python 2.X and 3.x. If there are any problems please send me new issues. 
+This version has been tested under Python ver 2.7.13 and Python ver 3.5.3. If there are any problems please send me new issues. 
 
 It has been tested using the V1 camera module. I have not verified operation against the V2 module as of this update.
 
@@ -24,19 +24,30 @@ Download the Source directory and execute PiCameraApp.py. Under Wheezy, you must
 
 To run, open a terminal, change to the directory containing the source files, and enter **sudo python PiCameraApp.py**.
 
-## Known Issues **
+## Known Issues
 
 | Issue      | Description / Workaround                               |
 | :--------- | :----------------------------------------------------- |
 | LED | The led_pin parameter can be used to specify the GPIO pin which should be used to control the camera’s LED via the led attribute. If this is not specified, it should default to the correct value for your Pi platform. At present, the camera’s LED cannot be controlled on the Pi 3 (the GPIOs used to control the camera LED were re-routed to GPIO expander on the Pi 3). There are circumstances in which the camera firmware may override an existing LED setting. For example, in the case that the firmware resets the camera (as can happen with a CSI-2 timeout), the LED may also be reset. If you wish to guarantee that the LED remain off at all times, you may prefer to use the disable_camera_led option in config.txt (this has the added advantage that sudo privileges and GPIO access are not required, at least for LED control). |
-| framerate_range and H264 video | The App would raise an exception when attempting to cature H264 video when frasmerate_range was selected. The exception complained the framerate_delta could not be specified with framerate_range? For now, I don't allow capturing H264 videos with framerate_range selected. |
-| framerate and framerate_delta error checking | There are cases where the code may not catch an exception. Avoid setting framerate and framerate_delta values that could add to numbers less than or equal to zero.  A future update will try to fix this issue.
+| framerate_range and H264 video | The App would raise an exception when attempting to cature H264 video when framerate_range was selected. The exception complained the framerate_delta could not be specified with framerate_range??? Until I resolve this bug, I don't allow capturing H264 videos with framerate_range selected. |
+| framerate and framerate_delta error checking | There are cases where the code may not catch an exception. Avoid setting framerate and framerate_delta values that could add to numbers less than or equal to zero.  A future update will fix this issue.
+| JPEG image parameters | The JPEG image capture parameter 'Restart' is not supported with this release. |
+| H264 video parameters | The H264 video capture parameter 'Intra Period' is not supported with this release. |
+| Image Effects parameters | The Image Effect parameters for 'colorbalance', 'film', 'solarize', and 'film' are not supported with this release. |
 | | |
 
+## TODO List (future enhancements)
+
+| TODO       | Description                               |
+| :--------- | :----------------------------------------------------- |
+| Save Camera State | Allow the user to save and restore the current camera programming state. |
+| Output Samples | Allow the user to generate a simple Python script that will program the camera and take a still image or video. |
+| INI File | Have a configuration file that saves / restores Preferences |
+| Time Delay | Support programming the camera to take still/videos every <time>, delaying <time> until <number> or <end time> is reached. |
 
 ## API Reference
 
-PiCameraApp has been developed using Python ver 2.7. In addition, it uses the following additonal Python libraries:
+PiCameraApp has been developed using Python ver 2.7.13 and Python ver 3.5.3. In addition, it uses the following additonal Python libraries. See the PiCameraApp About dialog for exact versions used.
 
 | Library    | Usage                                               |
 | :--------- | :-------------------------------------------------- |
