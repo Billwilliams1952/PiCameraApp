@@ -12,6 +12,8 @@ Note: I am an old (old, old, old, ..., so very old) Windows programmer going bac
 
 This version should work under Python 2.X and 3.x. If there are any problems please send me new issues. 
 
+It has been tested using the V1 camera module. I have not verified operation against the V2 module as of this update.
+
 Version 0.2 includes user interface refresh, new icons, addition of tooltips (the file **/Assets/Tooltips.txt** can be modified by the user to add his/her own tips), and additional camera functionality in accordance with https://picamera.readthedocs.io/en/release-1.13/.
 
 ![mainscreen0 2](https://user-images.githubusercontent.com/3778024/36648609-43091bc0-1a5b-11e8-97c8-be0db1249a32.png)
