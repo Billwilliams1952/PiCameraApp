@@ -16,7 +16,7 @@ sudo apt-get install python3-pil.imagetk.
 
 Version 0.2 includes user interface refresh, new icons, addition of tooltips (the file **/Assets/Tooltips.txt** can be modified by the user to add his/her own tips), and additional camera functionality in accordance with https://picamera.readthedocs.io/en/release-1.13/.
 
-![alt tag](https://cloud.githubusercontent.com/assets/3778024/20574032/44029314-b178-11e6-90f5-243d38602be0.png)
+![mainscreen0 2](https://user-images.githubusercontent.com/3778024/36648609-43091bc0-1a5b-11e8-97c8-be0db1249a32.png)
 
 ## Installation
 
