@@ -14,7 +14,7 @@ This version should work under Python 2.X and 3.x. If there are any problems ple
 
 sudo apt-get install python3-pil.imagetk.
 
-Version 0.2 includes user interface refresh, new icons, addition of tooltips (the file /Assets/ToolTips.txt) can be modified by the user to add his/her own tips, and additional camera functionality in accordance with https://picamera.readthedocs.io/en/release-1.13/.
+Version 0.2 includes user interface refresh, new icons, addition of tooltips (the file **/Assets/Tooltips.txt** can be modified by the user to add his/her own tips), and additional camera functionality in accordance with https://picamera.readthedocs.io/en/release-1.13/.
 
 ![alt tag](https://cloud.githubusercontent.com/assets/3778024/20574032/44029314-b178-11e6-90f5-243d38602be0.png)
 
