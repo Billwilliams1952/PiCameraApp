@@ -34,6 +34,7 @@ To run, open a terminal, change to the directory containing the source files, an
 | framerate and framerate_delta error checking | There are cases where the code may not catch an exception. Avoid setting framerate and framerate_delta values that could add to numbers less than or equal to zero.  A future update will fix this issue.
 | JPEG image parameters | The JPEG image capture parameter 'Restart' is not supported with this release. |
 | H264 video parameters | The H264 video capture parameter 'Intra Period' is not supported with this release. |
+| Other video paramaters | 'bitrate' and 'quality' are not supported in this release. |
 | Image Effects parameters | The Image Effect parameters for 'colorbalance', 'film', 'solarize', and 'film' are not supported with this release. |
 | EXIF data display | The python exif module does not support all EXIF metadata. Find a better solution. |
 | Image flip buttons | The two image flip buttons on the bottom image pane are disabled. These are meant to 'flip' the PIL image that is displayed. To flip or rotate the camera image, use the buttons on the top preview pane. |
