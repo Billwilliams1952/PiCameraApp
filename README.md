@@ -33,6 +33,8 @@ PiCameraApp has been developed using Python ver 2.7. In addition, it uses the fo
 | PIL / Pillow | The Pillow fork of the Python Image Library. One issue is with PIL ImageTk under Python 3.x. It was not installed on my RPI. If you have similar PIL Import Errors use: **sudo apt-get install python3-pil.imagetk**. |
 |     |    | 
 
+![about](https://user-images.githubusercontent.com/3778024/36648694-71283a1c-1a5c-11e8-9c85-ec1f07218cca.png)
+
 ## License
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
