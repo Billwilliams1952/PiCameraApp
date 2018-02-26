@@ -10,9 +10,7 @@ Note: I am an old (old, old, old, ..., so very old) Windows programmer going bac
 
 ## Updates
 
-This version should work under Python 2.X and 3.x. If there are any problems please send me new issues. One issue is with PIL ImageTk under Python 3.x. It was not installed on my RPI. If you have similar PIL Import Errors use:
-
-sudo apt-get install python3-pil.imagetk.
+This version should work under Python 2.X and 3.x. If there are any problems please send me new issues. 
 
 Version 0.2 includes user interface refresh, new icons, addition of tooltips (the file **/Assets/Tooltips.txt** can be modified by the user to add his/her own tips), and additional camera functionality in accordance with https://picamera.readthedocs.io/en/release-1.13/.
 
@@ -32,7 +30,7 @@ PiCameraApp has been developed using Python ver 2.7. In addition, it uses the fo
 | :--------- | :-------------------------------------------------- |
 | picamera   | The python interface to the PiCamera hardware. See https://picamera.readthedocs.io/en/release-1.13/install.html |
 | RPi.GPIO   | Required to toggle the LED on the camera. Can get it at http://www.raspberrypi-spy.co.uk/2012/05/install-rpi-gpio-python-library/ |
-| PIL / Pillow | The Pillow fork of the Python Image Library. |
+| PIL / Pillow | The Pillow fork of the Python Image Library. One issue is with PIL ImageTk under Python 3.x. It was not installed on my RPI. If you have similar PIL Import Errors use: **sudo apt-get install python3-pil.imagetk**. |
 |     |    | 
 
 ## License
