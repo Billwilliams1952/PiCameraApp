@@ -439,12 +439,9 @@ class PiCameraApp ( Frame ):
 
 		filemenu = Menu(menubar,tearoff=0,foreground='black',background='#F0F0F0',
 		activebackground='#86ABD9',activeforeground='white')
-		filemenu.add_command(label="Save Image...",underline=0,compound='left',
-			command=lambda e=None:self.SavePictureorVideo(e),accelerator='Ctrl+S')
-		self.DefineAccelerators('c','s',lambda e=None:self.SavePictureorVideo(e))
-		filemenu.add_command(label="Save Camera setups...",underline=0,
-			command=lambda e=None:self.SaveCameraSetups(e))
-		filemenu.add_separator()
+		#filemenu.add_command(label="Save Camera setups...",underline=0,
+			#command=lambda e=None:self.SaveCameraSetups(e))
+		#filemenu.add_separator()
 		filemenu.add_command(label="Preferences...",underline=0,
 			image=self.iconPrefs, compound='left',
 			command=lambda e=None:self.SystemPreferences(e))
@@ -498,6 +495,9 @@ class PiCameraApp ( Frame ):
 			image=self.iconCamera,compound='left',
 			command=lambda e=None:self.TakePicture(e),accelerator='Ctrl+P')
 		self.DefineAccelerators('c','p',lambda e=None:self.TakePicture(e))
+		photomenu.add_command(label="Save Image...",underline=0,compound='left',
+			command=lambda e=None:self.SavePictureorVideo(e),accelerator='Ctrl+S')
+		self.DefineAccelerators('c','s',lambda e=None:self.SavePictureorVideo(e))
 		photomenu.add_command(label="Clear picture",underline=0,
 			image=self.iconClose,compound='left',
 			command=lambda e=None:self.ClearPicture(e),accelerator='Ctrl+C')
@@ -805,10 +805,6 @@ class PiCameraApp ( Frame ):
 			self.TempFile = PreferencesDialog.DefaultVideoDir + '/__TMP__.' + \
 									 self.VidFormat
 			if self.VidFormat == 'h264':
-				if self.camera.framerate == 0:
-					# BUG in firmware? H264 with framerate_range gives an
-					# error about framerate_delta. Why?
-					return
 				self.camera.start_recording(output=self.TempFile,
 					format=self.VidFormat,profile=H264.Profile,level=H264.Level,
 					intra_period=H264.IntraPeriod,intra_refresh=H264.IntraRefresh,
