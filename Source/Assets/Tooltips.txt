@@ -77,7 +77,7 @@ underlying firmware limitation. $
 If a GPIO library is available (only RPi.GPIO is currently supported),
 and if the python process has the necessary privileges (typically this
 means running as root via sudo), this control can be used to set the
-state of the camera’s LED.\n\nAt present, the camera’s LED cannot be controlled
+state of the camera's LED.\n\nAt present, the camera's LED cannot be controlled
 on the Pi 3 (the GPIOs used to control the camera LED were re-routed to GPIO
 expander on the Pi 3). (C) $
 103 : Enable/disable removeal of video noise by applying a denoise algorithm to 
@@ -174,13 +174,13 @@ value is Auto, else it is the Manually set value. $
 
 # Exposure compensation - DRC
 # Add radio buttons Disable / Enable
-230 : Adjust the camera’s exposure compensation level.\n\n
+230 : Adjust the camera's exposure compensation level.\n\n
 The default value is 0. Larger values result in brighter images, smaller (negative) values 
 result in dimmer images. $
 231 : Disable exposure compensation (default). $
 232 : Enable exposure compensation. Adjust the amount using the slider. $
 233 : Disable Dynamic Range Compression (off). $
-234 : Select the strength of the dynamic range compression applied to the camera’s output 
+234 : Select the strength of the dynamic range compression applied to the camera's output 
 using the drop down list.\n\nWARNING: Enabling DRC will override fixed white balance gains
 (set under Auto white balance settings). $
 235 : List of available DRC strengths to apply to the camera's output. $
@@ -250,7 +250,7 @@ value, the highest framerate range 'To' value is fixed at 90. $
 
 # ------------- Advanced Tab ----------------
 350 : Select Auto sensor mode (default).\n\nThis is an advanced property which can be 
-used to control the camera’s sensor 
+used to control the camera's sensor 
 mode. By default, mode 0 is used which allows the camera to automatically select 
 an input mode based on the requested resolution and framerate. $
 351 : Select a sensor mode from the drop down list.\n\n
@@ -265,14 +265,14 @@ This appears to be a firmware limitation. $
 360: Set the clock mode to 'reset'.\n\n
 This is an advanced property which can be used to control the nature of the frame 
 timestamps available from the frame property. When this is “reset” (the default) 
-each frame’s timestamp will be relative to the start of the recording. (C) $
+each frame's timestamp will be relative to the start of the recording. (C) $
 361: Set the clock mode to 'raw'.\n\n
 This is an advanced property which can be used to control the nature of the frame 
 timestamps available from the frame property. When this is 
-“raw”, each frame’s timestamp will be relative to the last initialization of the camera.
+“raw”, each frame's timestamp will be relative to the last initialization of the camera.
 (C) $
-362 : The camera’s timestamp is a 64-bit integer representing the number of microseconds 
-since the last system boot. When the camera’s clock_mode is 'raw' the values returned 
+362 : The camera's timestamp is a 64-bit integer representing the number of microseconds 
+since the last system boot. When the camera's clock_mode is 'raw' the values returned 
 by this attribute are comparable to those from the frame timestamp attribute. (C) $
 363 : Statistics will be calculated from the preceding preview frame (this also 
 applies when the preview is not visible). $
@@ -280,7 +280,7 @@ applies when the preview is not visible). $
 The advantages to calculating scene statistics from the captured image are that 
 time between startup and capture is reduced as only the AGC (automatic gain control) 
 has to converge. The downside is that processing time for captures increases and 
-that white balance and gain won’t necessarily match the preview.\n\n
+that white balance and gain won't necessarily match the preview.\n\n
 Warning: Enabling the still statistics pass will override fixed white balance gains. (C) $
 370 : Remove any color effect applied to the camera. $
 371 : Set the color effect applied to the camera using the three sliders.\n\n
@@ -323,7 +323,7 @@ ratio.  $
 2023 : Defines the quality of the thumbnail. Defaults to 40.\n\n
 See JPEG quality for more information. $
 2030 : No Bayer data is included in Exif metadata. $
-2031 : Raw bayer data from the camera’s sensor is included in the Exif metadata. $
+2031 : Raw bayer data from the camera's sensor is included in the Exif metadata. $
 2100 : Enable / disable including EXIF metadata when the quick image is saved.\n\n
 Note: EXIF data is always included in picamera JPEG files. This option pertains to
 saving the image that is displayed in the photo viewer pane. The PILLOW library is
@@ -335,10 +335,10 @@ data. $
 the tag 'EXIF.UserComment'. $
 
 #-------------- Video Params Dialog -----------------
-3000 : Select the H.264 profile to use for encoding. Defaults to ‘high’, but can be 
-one of ‘baseline’, ‘main’, ‘extended’, ‘high’, or ‘constrained’. $
-3001 : The H.264 level to use for encoding. Defaults to ‘4’, but can be any H.264 level 
-up to ‘4.2’. $
+3000 : Select the H.264 profile to use for encoding. Defaults to ‘high', but can be 
+one of ‘baseline', ‘main', ‘extended', ‘high', or ‘constrained'. $
+3001 : The H.264 level to use for encoding. Defaults to ‘4', but can be any H.264 level 
+up to ‘4.2'. $
 3002 : The key frame rate (the rate at which I-frames are inserted in the output).\n\n
 Select None (default).\n
 Select Single initial I-frame, and then only P-frames subsequently.\n
@@ -346,8 +346,8 @@ Select Frames between I-frames. The number of frames is entered in the edit fiel
 Note: split_recording() will fail in this mode. (C) $
 3003 : The number of frames between I-Frames. $
 3004 : Select the key frame format (the way in which I-frames will be inserted into 
-the output stream). Defaults to None, but can be one of ‘cyclic’, ‘adaptive’, ‘both’, 
-or ‘cyclicrows’. $
+the output stream). Defaults to None, but can be one of ‘cyclic', ‘adaptive', ‘both', 
+or ‘cyclicrows'. $
 3005 : The encoder should output SPS/PPS headers within the stream to 
 ensure GOPs (groups of pictures) are self describing. This is important for streaming 
 applications where the client may wish to seek within the stream, and enables the use 
@@ -357,8 +357,8 @@ of split_recording(). (C) $
 output stream. $
 3008 : Do not include “Supplemental Enhancement Information” data within output 
 stream. $
-3009 : The encoder includes the camera’s framerate in the SPS header. $
-3010 : Do not include the camera’s framerate in the SPS header. $
+3009 : The encoder includes the camera's framerate in the SPS header. $
+3010 : Do not include the camera's framerate in the SPS header. $
 3011 : No motion vector estimation data is output. $
 3012 : Motion vector estimation data is output to the selected file. $
 3013 : Select a file to which to save motion vector estimation data. $
@@ -389,7 +389,7 @@ may be modified by selecting File | Preferences... then selecting the Interface 
 408 : Use the default white color for the annotation text output. $
 409 : Select of text color for the annotation text output. The underlying 
 firmware does not directly support setting all components of the text color,
-only the Y’ component of a Y’UV tuple. This is roughly (but not precisely) 
+only the Y' component of a Y'UV tuple. This is roughly (but not precisely) 
 analogous to the “brightness” of a color, so you may choose to think of 
 this as setting how bright the annotation text will be relative to its
 background. (C) $
@@ -428,4 +428,3 @@ hovering over a control/widget. $
 6113 : Current amount of tooltip delay. $
 
 # Other tab
-
